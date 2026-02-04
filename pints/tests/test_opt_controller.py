@@ -20,6 +20,45 @@ debug = False
 method = pints.XNES
 
 
+class Mock1DError(pints.ErrorMeasure):
+    """ Mock-up 1d error, returned values intended to be ignored. """
+    def n_parameters(self):
+        return 1
+
+    def __call__(self, x):
+        return 0
+
+
+class List1DOptimiser(pints.Optimiser):
+    """ Mock-up optimiser using a fixed lists of values and evaluations. """
+    xs = []
+    fs = []
+
+    def __init__(self, x0, sigma0=None, boundaries=None):
+        super().__init__(x0, sigma0, boundaries)
+        self._i = 0
+
+    def ask(self):
+        return np.array([self.xs[self._i]])
+
+    def name(self):
+        return 'List1D'
+
+    def tell(self, f):
+        self._i += 1
+        return self.fs[self._i - 1]
+
+    def x_best(self):
+        try:
+            return np.array([self.xs[self._i]])
+        except IndexError:
+            raise Exception('List1DOptimiser has exhausted list values at'
+                            f' index {self._i}')
+
+    def f_best(self):
+        return self.fs[self._i]
+
+
 class TestOptimisationController(unittest.TestCase):
     """
     Tests shared optimisation properties.
@@ -151,85 +190,6 @@ class TestOptimisationController(unittest.TestCase):
         opt.run()
         self.assertEqual(len(args), 0)
 
-    def test_optimise(self):
-        # Tests :meth: `pints.optimise()`.
-
-        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
-        x = np.array([0, 1.01])
-        s = 0.01
-        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
-        with StreamCapture():
-            x, f = pints.optimise(r, x, s, b, method=pints.XNES)
-        self.assertEqual(x.shape, (2, ))
-        self.assertTrue(f < 1e-6)
-
-    def test_transform(self):
-        # Test optimisation with parameter transformation.
-
-        # Test with LogPDF
-        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
-        x0 = np.array([0, 1.01])
-        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
-        s = 0.01
-        t = pints.RectangularBoundariesTransformation(b)
-        with warnings.catch_warnings(record=True):
-            opt = pints.OptimisationController(r, x0, s, b, t, method)
-        opt.set_log_to_screen(False)
-        opt.set_max_unchanged_function_iterations(None)
-        opt.set_max_iterations(10)
-        opt.run()
-
-        # Test with ErrorMeasure
-        r = pints.toy.ParabolicError()
-        x0 = [0.1, 0.1]
-        b = pints.RectangularBoundaries([-1, -1], [1, 1])
-        s = 0.1
-        t = pints.RectangularBoundariesTransformation(b)
-        with warnings.catch_warnings(record=True):
-            opt = pints.OptimisationController(r, x0, s, b, t, method)
-        opt.set_log_to_screen(False)
-        opt.set_max_unchanged_function_iterations(None)
-        opt.set_max_iterations(10)
-        x, _ = opt.run()
-
-        # Test output is detransformed
-        self.assertEqual(x.shape, (2, ))
-        self.assertTrue(b.check(x))
-
-    def test_stopping_max_evaluations(self):
-        # Runs an optimisation with the max_fevals stopping criterion.
-
-        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
-        x = np.array([0, 1.01])
-        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
-        s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method=method)
-        opt.set_log_to_screen(True)
-        opt.set_max_unchanged_function_iterations(None)
-        opt.set_max_evaluations(10)
-        self.assertEqual(opt.max_evaluations(), 10)
-        self.assertRaises(ValueError, opt.set_max_evaluations, -1)
-        with StreamCapture() as c:
-            opt.run()
-            self.assertIn('Halting: Maximum number of evaluations', c.text())
-
-    def test_stopping_max_iterations(self):
-        # Runs an optimisation with the max_iter stopping criterion.
-
-        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
-        x = np.array([0, 1.01])
-        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
-        s = 0.01
-        opt = pints.OptimisationController(r, x, s, b, method=method)
-        opt.set_log_to_screen(True)
-        opt.set_max_unchanged_function_iterations(None)
-        opt.set_max_iterations(10)
-        self.assertEqual(opt.max_iterations(), 10)
-        self.assertRaises(ValueError, opt.set_max_iterations, -1)
-        with StreamCapture() as c:
-            opt.run()
-            self.assertIn('Halting: Maximum number of iterations', c.text())
-
     def test_logging(self):
 
         # Test with logpdf
@@ -312,28 +272,195 @@ class TestOptimisationController(unittest.TestCase):
         # Invalid log interval
         self.assertRaises(ValueError, opt.set_log_interval, 0)
 
-    def test_stopping_max_unchanged(self):
-        # Runs an optimisation with the max_unchanged stopping criterion.
+    def test_optimise(self):
+        # Tests :meth: `pints.optimise()`.
+
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = np.array([0, 1.01])
+        s = 0.01
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
+        with StreamCapture():
+            x, f = pints.optimise(r, x, s, b, method=pints.XNES)
+        self.assertEqual(x.shape, (2, ))
+        self.assertTrue(f < 1e-6)
+
+    def test_transform(self):
+        # Test optimisation with parameter transformation.
+
+        # Test with LogPDF
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x0 = np.array([0, 1.01])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
+        s = 0.01
+        t = pints.RectangularBoundariesTransformation(b)
+        with warnings.catch_warnings(record=True):
+            opt = pints.OptimisationController(r, x0, s, b, t, method)
+        opt.set_log_to_screen(False)
+        opt.set_max_unchanged_function_iterations(None)
+        opt.set_max_iterations(10)
+        opt.run()
+
+        # Test with ErrorMeasure
+        r = pints.toy.ParabolicError()
+        x0 = [0.1, 0.1]
+        b = pints.RectangularBoundaries([-1, -1], [1, 1])
+        s = 0.1
+        t = pints.RectangularBoundariesTransformation(b)
+        with warnings.catch_warnings(record=True):
+            opt = pints.OptimisationController(r, x0, s, b, t, method)
+        opt.set_log_to_screen(False)
+        opt.set_max_unchanged_function_iterations(None)
+        opt.set_max_iterations(10)
+        x, _ = opt.run()
+
+        # Test output is detransformed
+        self.assertEqual(x.shape, (2, ))
+        self.assertTrue(b.check(x))
+
+    def test_stopping_max_evaluations(self):
+        # Runs an optimisation with the max_fevals stopping criterion.
+
+
+
+
         r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
         x = np.array([0, 1.01])
         b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
         s = 0.01
         opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
+        opt.set_max_unchanged_function_iterations(None)
+        opt.set_max_evaluations(10)
+        self.assertEqual(opt.max_evaluations(), 10)
+        self.assertRaises(ValueError, opt.set_max_evaluations, -1)
+        with StreamCapture() as c:
+            opt.run()
+            self.assertIn('Halting: Maximum number of evaluations', c.text())
+
+    def test_stopping_max_iterations(self):
+        # Runs an optimisation with the max_iter stopping criterion.
+
+
+
+
+        r = pints.toy.TwistedGaussianLogPDF(2, 0.01)
+        x = np.array([0, 1.01])
+        b = pints.RectangularBoundaries([-0.01, 0.95], [0.01, 1.05])
+        s = 0.01
+        opt = pints.OptimisationController(r, x, s, b, method=method)
+        opt.set_log_to_screen(True)
+        opt.set_max_unchanged_function_iterations(None)
+        opt.set_max_iterations(10)
+        self.assertEqual(opt.max_iterations(), 10)
+        self.assertRaises(ValueError, opt.set_max_iterations, -1)
+        with StreamCapture() as c:
+            opt.run()
+            self.assertIn('Halting: Maximum number of iterations', c.text())
+
+
+    def test_stopping_max_unchanged_function(self):
+        # Runs a mock optimisation with the max_unchanged function criterion.
+        # Test case starts with drift (each step below threshold, but total
+        # change is above), then should halt at 5
+
+        e = Mock1DError()
+        opt = pints.OptimisationController(e, [0], method=List1DOptimiser)
+        m = opt.optimiser()
+        m.fs = [0, 0.5, 1, 1.5, 2.0, 2.5, 4, 5, 5.1, 5.2, 5.3, 5.4, 1, 3, 0]
+        m.xs = [0] * len(m.fs)
+        opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
+
+        # Set by default
+        self.assertEqual(opt.max_unchanged_function_iterations(), (200, 1e-11))
+
+        # Unset and reset without threshold
         opt.set_max_unchanged_function_iterations(None)
         self.assertEqual(opt.max_unchanged_function_iterations(), (None, None))
-        opt.set_max_unchanged_function_iterations(2, 1e-6)
-        self.assertEqual(opt.max_unchanged_function_iterations(), (2, 1e-6))
         opt.set_max_unchanged_function_iterations(3)
         self.assertEqual(opt.max_unchanged_function_iterations(), (3, 1e-11))
+
+        # Unset and reset with threshold
+        opt.set_max_unchanged_function_iterations(None, None)
+        self.assertEqual(opt.max_unchanged_function_iterations(), (None, None))
+        opt.set_max_unchanged_function_iterations(4, 1)
+        self.assertEqual(opt.max_unchanged_function_iterations(), (4, 1))
+
+        # Bad calls
         self.assertRaises(
             ValueError, opt.set_max_unchanged_function_iterations, -1)
         self.assertRaises(
             ValueError, opt.set_max_unchanged_function_iterations, 10, -1)
+
+        # Test deprecated aliases
+        a = opt.max_unchanged_function_iterations()
+        with warnings.catch_warnings(record=True) as w:
+            b = opt.max_unchanged_iterations()
+        self.assertIn('deprecated', str(w[-1].message))
+        self.assertEqual(a, b)
+        with warnings.catch_warnings(record=True) as w:
+            opt.set_max_unchanged_iterations(1, 0)
+        self.assertIn('deprecated', str(w[-1].message))
+        self.assertEqual(opt.max_unchanged_function_iterations(), (1, 0))
+        opt.set_max_unchanged_function_iterations(4, 1)
+
+        # Test
         with StreamCapture() as c:
             opt.run()
-            self.assertIn('Halting: No significant change', c.text())
+        self.assertIn('No significant change in best function', c.text())
+        self.assertEqual(opt.iterations(), 11)
+
+    def test_stopping_max_unchanged_parameter(self):
+        # Runs a mock optimisation with the max_unchanged parameter criterion.
+
+        e = Mock1DError()
+        opt = pints.OptimisationController(e, [0], method=List1DOptimiser)
+        m = opt.optimiser()
+        m.xs = [0, 1, 1.1, 1.2, 2, 3, 4, 4.1, 4.2, 4.3, 5, 6, 7]
+        m.fs = [0] * len(m.xs)
+        opt.set_log_to_screen(True)
+        opt.set_max_iterations(None)
+        opt.set_max_unchanged_function_iterations(None)
+        self.assertEqual(
+            opt.max_unchanged_parameter_iterations(), (None, None))
+
+        # Set without threshold
+        opt.set_max_unchanged_parameter_iterations(2)
+        n, t = opt.max_unchanged_parameter_iterations()
+        self.assertEqual(n, 2)
+        self.assertEqual(list(t), [1e-11])
+
+        # Unset and reset without threshold
+        opt.set_max_unchanged_parameter_iterations(None)
+        n, t = opt.max_unchanged_parameter_iterations()
+        self.assertIsNone(n)
+        self.assertIsNone(t)
+        opt.set_max_unchanged_parameter_iterations(2)
+        n, t = opt.max_unchanged_parameter_iterations()
+        self.assertEqual(n, 2)
+        self.assertEqual(list(t), [1e-11])
+
+        # Unset and reset with threshold
+        opt.set_max_unchanged_parameter_iterations(None, None)
+        n, t = opt.max_unchanged_parameter_iterations()
+        self.assertIsNone(n)
+        self.assertIsNone(t)
+        opt.set_max_unchanged_parameter_iterations(3, 1)
+        n, t = opt.max_unchanged_parameter_iterations()
+        self.assertEqual(n, 3)
+        self.assertEqual(list(t), [1])
+
+        # Bad calls
+        self.assertRaises(
+            ValueError, opt.set_max_unchanged_parameter_iterations, -1)
+        self.assertRaises(
+            ValueError, opt.set_max_unchanged_parameter_iterations, 10, -1)
+
+        # Test
+        with StreamCapture() as c:
+            opt.run()
+        self.assertIn('No significant change in best parameters', c.text())
+        self.assertEqual(opt.iterations(), 9)
 
     def test_stopping_threshold(self):
         # Runs an optimisation with the threshold stopping criterion.

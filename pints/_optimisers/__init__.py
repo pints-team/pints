@@ -461,7 +461,6 @@ class OptimisationController(object):
 
         # Maximum iterations
         self._max_iterations = None
-        self.set_max_iterations()   # Enable, with default arguments
 
         # Maximum number of iterations where f did not change significantly
         self._unchanged_f_max_iterations = None  # max iter without change
@@ -477,7 +476,8 @@ class OptimisationController(object):
         # Function threshold: stop if f(x) < threshold
         self._function_threshold = None
 
-        # Default stopping criterion
+        # Default stopping critera
+        self.set_max_iterations()
         self.set_max_unchanged_function_iterations()
 
     def _check_stopping_criteria(self, iterations, unchanged_f_iterations,
@@ -1045,15 +1045,15 @@ class OptimisationController(object):
                     'Maximum number of iterations cannot be negative.')
 
             # Test threshold size, convert scalar if needed, check sign
-            np = self._function.n_parameters()
+            n_parameters = self._function.n_parameters()
             if np.isscalar(threshold):
-                threshold = np.ones(np) * float(threshold)
-            elif len(threshold) == np:
+                threshold = np.ones(n_parameters) * float(threshold)
+            elif len(threshold) == n_parameters:
                 threshold = pints.vector(threshold)
             else:
                 raise ValueError(
                     'Minimum significant parameter change must be a scalar or'
-                    f' have length {np}, got {len(threshold)}.')
+                    f' have length {n_parameters}, got {len(threshold)}.')
             if np.any(threshold < 0):
                 raise ValueError(
                     'Minimum significant parameter change cannot be negative.')
