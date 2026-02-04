@@ -115,7 +115,7 @@ class TestOptimisationController(unittest.TestCase):
         s = 0.01
         opt = pints.OptimisationController(r, x0, s, method=method)
         opt.set_log_to_screen(False)
-        opt.set_max_unchanged_iterations(None)
+        opt.set_max_unchanged_function_iterations(None)
         opt.set_max_iterations(10)
 
         # Pass in an invalid value
@@ -144,7 +144,7 @@ class TestOptimisationController(unittest.TestCase):
         self.assertEqual(len(args), 0)
         opt = pints.OptimisationController(r, x0, s, method=method)
         opt.set_log_to_screen(False)
-        opt.set_max_unchanged_iterations(None)
+        opt.set_max_unchanged_function_iterations(None)
         opt.set_max_iterations(10)
         opt.set_callback(cb)
         opt.set_callback(None)
@@ -175,7 +175,7 @@ class TestOptimisationController(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             opt = pints.OptimisationController(r, x0, s, b, t, method)
         opt.set_log_to_screen(False)
-        opt.set_max_unchanged_iterations(None)
+        opt.set_max_unchanged_function_iterations(None)
         opt.set_max_iterations(10)
         opt.run()
 
@@ -188,7 +188,7 @@ class TestOptimisationController(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             opt = pints.OptimisationController(r, x0, s, b, t, method)
         opt.set_log_to_screen(False)
-        opt.set_max_unchanged_iterations(None)
+        opt.set_max_unchanged_function_iterations(None)
         opt.set_max_iterations(10)
         x, _ = opt.run()
 
@@ -205,7 +205,7 @@ class TestOptimisationController(unittest.TestCase):
         s = 0.01
         opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
-        opt.set_max_unchanged_iterations(None)
+        opt.set_max_unchanged_function_iterations(None)
         opt.set_max_evaluations(10)
         self.assertEqual(opt.max_evaluations(), 10)
         self.assertRaises(ValueError, opt.set_max_evaluations, -1)
@@ -222,7 +222,7 @@ class TestOptimisationController(unittest.TestCase):
         s = 0.01
         opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
-        opt.set_max_unchanged_iterations(None)
+        opt.set_max_unchanged_function_iterations(None)
         opt.set_max_iterations(10)
         self.assertEqual(opt.max_iterations(), 10)
         self.assertRaises(ValueError, opt.set_max_iterations, -1)
@@ -240,7 +240,7 @@ class TestOptimisationController(unittest.TestCase):
         s = 0.01
         opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
-        opt.set_max_unchanged_iterations(None)
+        opt.set_max_unchanged_function_iterations(None)
         opt.set_log_interval(3)
         opt.set_max_iterations(10)
         with StreamCapture() as c:
@@ -278,7 +278,7 @@ class TestOptimisationController(unittest.TestCase):
         x = np.array([1.01, 1.01])
         opt = pints.OptimisationController(r, x, method=pints.SNES)
         opt.set_log_to_screen(True)
-        opt.set_max_unchanged_iterations(None)
+        opt.set_max_unchanged_function_iterations(None)
         opt.set_log_interval(4)
         opt.set_max_iterations(11)
         opt.optimiser().set_population_size(4)
@@ -321,14 +321,16 @@ class TestOptimisationController(unittest.TestCase):
         opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
-        opt.set_max_unchanged_iterations(None)
-        self.assertEqual(opt.max_unchanged_iterations(), (None, None))
-        opt.set_max_unchanged_iterations(2, 1e-6)
-        self.assertEqual(opt.max_unchanged_iterations(), (2, 1e-6))
-        opt.set_max_unchanged_iterations(3)
-        self.assertEqual(opt.max_unchanged_iterations(), (3, 1e-11))
-        self.assertRaises(ValueError, opt.set_max_unchanged_iterations, -1)
-        self.assertRaises(ValueError, opt.set_max_unchanged_iterations, 10, -1)
+        opt.set_max_unchanged_function_iterations(None)
+        self.assertEqual(opt.max_unchanged_function_iterations(), (None, None))
+        opt.set_max_unchanged_function_iterations(2, 1e-6)
+        self.assertEqual(opt.max_unchanged_function_iterations(), (2, 1e-6))
+        opt.set_max_unchanged_function_iterations(3)
+        self.assertEqual(opt.max_unchanged_function_iterations(), (3, 1e-11))
+        self.assertRaises(
+            ValueError, opt.set_max_unchanged_function_iterations, -1)
+        self.assertRaises(
+            ValueError, opt.set_max_unchanged_function_iterations, 10, -1)
         with StreamCapture() as c:
             opt.run()
             self.assertIn('Halting: No significant change', c.text())
@@ -343,7 +345,7 @@ class TestOptimisationController(unittest.TestCase):
         opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(True)
         opt.set_max_iterations(None)
-        opt.set_max_unchanged_iterations(None)
+        opt.set_max_unchanged_function_iterations(None)
         opt.set_threshold(5)
         self.assertEqual(opt.threshold(), 5)
         with StreamCapture() as c:
@@ -361,7 +363,7 @@ class TestOptimisationController(unittest.TestCase):
         opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(debug)
         opt.set_max_iterations(None)
-        opt.set_max_unchanged_iterations(None)
+        opt.set_max_unchanged_function_iterations(None)
         self.assertRaises(ValueError, opt.run)
 
     def test_set_population_size(self):
@@ -438,7 +440,7 @@ class TestOptimisationController(unittest.TestCase):
         s = 0.01
         opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(False)
-        opt.set_max_unchanged_iterations(50, 1e-11)
+        opt.set_max_unchanged_function_iterations(50, 1e-11)
 
         # Before run methods return None
         self.assertIsNone(opt.iterations())
@@ -466,7 +468,7 @@ class TestOptimisationController(unittest.TestCase):
         s = 0.01
         opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_log_to_screen(False)
-        opt.set_max_unchanged_iterations(None)
+        opt.set_max_unchanged_function_iterations(None)
         opt.set_max_iterations(10)
         opt.run()
         self.assertRaisesRegex(

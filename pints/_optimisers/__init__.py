@@ -512,13 +512,13 @@ class OptimisationController(object):
         # Maximum number of iterations without significant change in f
         if (self._unchanged_f_max_iterations is not None and
                 unchanged_f_iterations >= self._unchanged_f_max_iterations):
-            return ('No significant change in  function for'
+            return ('No significant change in best function evaluation for'
                     f' {unchanged_f_iterations} iterations.')
 
         # Maximum number of iterations without significant change in x
         if (self._unchanged_x_max_iterations is not None and
                 unchanged_x_iterations >= self._unchanged_x_max_iterations):
-            return ('No significant change in position for'
+            return ('No significant change in best parameters for'
                     f' {unchanged_x_iterations} iterations.')
 
         # Maximum number of evaluations
@@ -555,13 +555,13 @@ class OptimisationController(object):
 
     def _has_stopping_criterion(self):
         """ Returns whether a stopping criterion has been set. """
-        return any(
+        return any((
             self._unchanged_f_max_iterations is not None,
             self._unchanged_x_max_iterations is not None,
             self._max_iterations is not None,
             self._max_evaluations is not None,
             self._function_threshold is not None,
-        )
+        ))
 
     def iterations(self):
         """
