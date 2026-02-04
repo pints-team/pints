@@ -900,7 +900,7 @@ class OptimisationController(object):
         :meth:`pints.Optimiser.f_best()` (default).
 
         The tracked ``f`` (and/or ``x``) value is used to evaluate stopping
-        criteria, and is the one returned from :method:`run`.
+        criteria, and is the one returned from :meth:`run`.
         """
         self._use_f_guessed = bool(use_f_guessed)
 
