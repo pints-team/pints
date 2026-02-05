@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-#
-# Tests the basic methods of the adaptive covariance base class.
-#
+##
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
@@ -13,10 +11,8 @@ import pints
 import pints.toy as toy
 
 
-class TestAdaptiveCovarianceMC(unittest.TestCase):
-    """
-    Tests the basic methods of the adaptive covariance MCMC routine.
-    """
+class TestMCMCSummary(unittest.TestCase):
+    """ Tests the MCMCSummary class. """
 
     @classmethod
     def setUpClass(cls):
@@ -151,6 +147,7 @@ class TestAdaptiveCovarianceMC(unittest.TestCase):
 
     def test_named_parameters(self):
         # tests that parameter names are used when values supplied
+
         parameters = ['rrrr', 'kkkk', 'ssss']
         results = pints.MCMCSummary(
             self.chains, parameter_names=parameters)
