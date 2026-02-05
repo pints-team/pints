@@ -8,7 +8,7 @@
 import numpy as np
 
 
-class LogPDF(object):
+class LogPDF():
     """
     Represents the natural logarithm of a (not necessarily normalised)
     probability density function (PDF).

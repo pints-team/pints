@@ -37,7 +37,7 @@ class ABCSampler(pints.Loggable, pints.TunableMethod):
         raise NotImplementedError
 
 
-class ABCController(object):
+class ABCController():
     """
     Samples from a :class:`pints.LogPrior`.
 

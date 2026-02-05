@@ -11,7 +11,7 @@ import pints
 import numpy as np
 
 
-class NutsState(object):
+class NutsState():
     """
     Class to hold information about the current state of the NUTS hamiltonian
     integration path.
