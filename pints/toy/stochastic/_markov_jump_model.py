@@ -76,7 +76,7 @@ class MarkovJumpModel(pints.ForwardModel, ToyModel):
            https://doi.org/10.1016/0021-9991(76)90041-3
     """
     def __init__(self, x0, V, propensities):
-        super(MarkovJumpModel, self).__init__()
+        super().__init__()
         self._x0 = np.asarray(x0)
         self._V = V
         self._propensities = propensities

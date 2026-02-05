@@ -45,7 +45,7 @@ class GoodwinOscillatorModel(ToyODEModel, pints.ForwardModelS1):
            Computational Statistics and Data Analysis.
     """
     def __init__(self):
-        super(GoodwinOscillatorModel, self).__init__()
+        super().__init__()
         self._y0 = [0.0054, 0.053, 1.93]
 
     def _dfdp(self, state, time, parameters):

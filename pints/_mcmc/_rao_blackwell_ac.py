@@ -47,7 +47,7 @@ class RaoBlackwellACMC(pints.AdaptiveCovarianceMC):
            https://doi.org/10.1007/s11222-008-9110-y
     """
     def __init__(self, x0, sigma0=None):
-        super(RaoBlackwellACMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
 
         # heuristic based on normal approximation
         self._lambda = (2.38**2) / self._n_parameters
@@ -87,5 +87,5 @@ class RaoBlackwellACMC(pints.AdaptiveCovarianceMC):
         self._Y = np.copy(self._proposed)
         self._X = np.copy(self._current)
 
-        return super(RaoBlackwellACMC, self).tell(fx)
+        return super().tell(fx)
 

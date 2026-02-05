@@ -57,7 +57,7 @@ class HaarioBardenetACMC(pints.AdaptiveCovarianceMC):
            https://doi.org/10.2307/3318737
     """
     def __init__(self, x0, sigma0=None):
-        super(HaarioBardenetACMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
 
         # Initial log lambda is zero
         self._log_lambda = 0
@@ -89,5 +89,5 @@ class AdaptiveCovarianceMCMC(HaarioBardenetACMC):
         warnings.warn(
             'The class `pints.AdaptiveCovarianceMCMC` is deprecated.'
             ' Please use `pints.HaarioBardenetACMC` instead.')
-        super(AdaptiveCovarianceMCMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
 

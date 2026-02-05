@@ -64,7 +64,7 @@ class RepressilatorModel(pints.ForwardModel, ToyModel):
     """
 
     def __init__(self, y0=None):
-        super(RepressilatorModel, self).__init__()
+        super().__init__()
 
         # Check initial values
         if y0 is None:

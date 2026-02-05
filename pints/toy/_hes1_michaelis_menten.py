@@ -146,7 +146,7 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
         if m0 < 0:
             raise ValueError('Initial condition cannot be negative.')
         y0 = [m0, self._p0[0], self._p0[1]]
-        super(Hes1Model, self).set_initial_conditions(y0)
+        super().set_initial_conditions(y0)
 
     def set_fixed_parameters(self, k):
         """

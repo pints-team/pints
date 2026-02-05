@@ -129,7 +129,7 @@ class RectangularBoundaries(Boundaries):
         The corresponding upper boundaries
     """
     def __init__(self, lower, upper):
-        super(RectangularBoundaries, self).__init__()
+        super().__init__()
 
         # Convert to shape (n,) vectors, copy to ensure they remain unchanged
         self._lower = pints.vector(lower)
@@ -205,7 +205,7 @@ class LogPDFBoundaries(Boundaries):
         within bounds. Anything _above_ the threshold counts as within bounds.
     """
     def __init__(self, log_pdf, threshold=-np.inf):
-        super(LogPDFBoundaries, self).__init__()
+        super().__init__()
 
         # Check log pdf
         if not isinstance(log_pdf, pints.LogPDF):

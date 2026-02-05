@@ -32,8 +32,7 @@ class MichaelisMentenModel(MarkovJumpModel):
         V = [[-1, -1, 1, 0],
              [1, 1, -1, 0],
              [0, 1, -1, 1]]
-        super(MichaelisMentenModel, self).__init__(initial_molecule_count,
-                                                   V, self._propensities)
+        super().__init__(initial_molecule_count, V, self._propensities)
 
     @staticmethod
     def _propensities(xs, ks):

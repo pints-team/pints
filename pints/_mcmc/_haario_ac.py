@@ -57,7 +57,7 @@ class HaarioACMC(pints.AdaptiveCovarianceMC):
            Heikki Haario, Eero Saksman, and Johanna Tamminen (2001) Bernoulli.
     """
     def __init__(self, x0, sigma0=None):
-        super(HaarioACMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
         self._log_lambda = 0
 
     def _adapt_internal(self, accepted, log_ratio):

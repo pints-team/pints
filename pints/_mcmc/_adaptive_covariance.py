@@ -27,7 +27,7 @@ class AdaptiveCovarianceMC(pints.SingleChainMCMC):
     """
 
     def __init__(self, x0, sigma0=None):
-        super(AdaptiveCovarianceMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
 
         # Current running status, used to initialise on first run and check
         # that certain methods are only called before or during run.

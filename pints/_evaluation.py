@@ -193,7 +193,7 @@ multiprocessing.html#all-platforms>`_ for details).
             max_tasks_per_worker=500,
             n_numpy_threads=1,
             args=None):
-        super(ParallelEvaluator, self).__init__(function, args)
+        super().__init__(function, args)
 
         # Determine number of workers
         if n_workers is None:
@@ -437,7 +437,7 @@ class MultiSequentialEvaluator(Evaluator):
         ``f(x, *args)``.
     """
     def __init__(self, functions, args=None):
-        super(MultiSequentialEvaluator, self).__init__(functions[0], args)
+        super().__init__(functions[0], args)
 
         # Check functions
         for function in functions:
@@ -473,7 +473,7 @@ class SequentialEvaluator(Evaluator):
         specified, ``f`` will be called as ``f(x, *args)``.
     """
     def __init__(self, function, args=None):
-        super(SequentialEvaluator, self).__init__(function, args)
+        super().__init__(function, args)
 
     def _evaluate(self, positions):
         scores = [0] * len(positions)
@@ -530,7 +530,7 @@ class _Worker(multiprocessing.Process):
     def __init__(
             self, function, args, tasks, results, max_tasks, max_threads,
             errors, error):
-        super(_Worker, self).__init__()
+        super().__init__()
         self.daemon = True
         self._function = function
         self._args = args

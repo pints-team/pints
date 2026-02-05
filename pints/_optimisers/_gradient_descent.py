@@ -20,7 +20,7 @@ class GradientDescent(pints.Optimiser):
     """
 
     def __init__(self, x0, sigma0=0.1, boundaries=None):
-        super(GradientDescent, self).__init__(x0, sigma0, boundaries)
+        super().__init__(x0, sigma0, boundaries)
 
         # Set optimiser state
         self._running = False

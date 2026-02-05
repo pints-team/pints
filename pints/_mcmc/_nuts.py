@@ -513,7 +513,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
     """
 
     def __init__(self, x0, sigma0=None):
-        super(NoUTurnMCMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
 
         # hyperparameters
         self._adaptor = [

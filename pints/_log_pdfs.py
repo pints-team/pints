@@ -182,7 +182,7 @@ class PooledLogPDF(LogPDF):
             pooled=[False, True])
     """
     def __init__(self, log_pdfs, pooled):
-        super(PooledLogPDF, self).__init__()
+        super().__init__()
 
         # Check input arguments
         if len(log_pdfs) < 2:
@@ -329,7 +329,7 @@ class ProblemLogLikelihood(LogPDF):
 
     """
     def __init__(self, problem):
-        super(ProblemLogLikelihood, self).__init__()
+        super().__init__()
         self._problem = problem
         # Cache some problem variables
         self._values = problem.values()
@@ -364,7 +364,7 @@ class LogPosterior(LogPDF):
         space.
     """
     def __init__(self, log_likelihood, log_prior):
-        super(LogPosterior, self).__init__()
+        super().__init__()
 
         # Check arguments
         if not isinstance(log_prior, LogPrior):
@@ -453,7 +453,7 @@ class SumOfIndependentLogPDFs(LogPDF):
         ])
     """
     def __init__(self, log_likelihoods):
-        super(SumOfIndependentLogPDFs, self).__init__()
+        super().__init__()
 
         # Check input arguments
         if len(log_likelihoods) < 2:

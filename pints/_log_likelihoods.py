@@ -69,7 +69,7 @@ class AR1LogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem):
-        super(AR1LogLikelihood, self).__init__(problem)
+        super().__init__(problem)
 
         # Get number of times, number of outputs
         self._nt = len(self._times) - 1
@@ -149,7 +149,7 @@ class ARMA11LogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem):
-        super(ARMA11LogLikelihood, self).__init__(problem)
+        super().__init__(problem)
 
         # Get number of times, number of outputs
         self._nt = len(self._times) - 2
@@ -205,7 +205,7 @@ class CauchyLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem):
-        super(CauchyLogLikelihood, self).__init__(problem)
+        super().__init__(problem)
 
         # Get number of times, number of outputs
         self._nt = len(self._times)
@@ -326,7 +326,7 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem, lower=None, upper=None):
-        super(CensoredGaussianLogLikelihood, self).__init__(problem)
+        super().__init__(problem)
 
         # Get number of times, number of outputs
         self._nt = len(self._times)
@@ -617,8 +617,7 @@ class ConstantAndMultiplicativeGaussianLogLikelihood(
     """
 
     def __init__(self, problem):
-        super(ConstantAndMultiplicativeGaussianLogLikelihood, self).__init__(
-            problem)
+        super().__init__(problem)
 
         # Get number of times and number of noise parameters
         self._nt = len(self._times)
@@ -819,8 +818,7 @@ class GaussianIntegratedLogUniformLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem):
-        super(GaussianIntegratedLogUniformLogLikelihood,
-              self).__init__(problem)
+        super().__init__(problem)
 
         # Get number of times, number of outputs
         self._nt = len(self._times)
@@ -908,7 +906,7 @@ class GaussianIntegratedUniformLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem, lower, upper):
-        super(GaussianIntegratedUniformLogLikelihood, self).__init__(problem)
+        super().__init__(problem)
 
         # Get number of times, number of outputs
         self._nt = len(self._times)
@@ -1012,7 +1010,7 @@ class GaussianKnownSigmaLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem, sigma):
-        super(GaussianKnownSigmaLogLikelihood, self).__init__(problem)
+        super().__init__(problem)
 
         # Store counts
         self._no = problem.n_outputs()
@@ -1110,7 +1108,7 @@ class GaussianLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem):
-        super(GaussianLogLikelihood, self).__init__(problem)
+        super().__init__(problem)
 
         # Get number of times, number of outputs
         self._nt = len(self._times)
@@ -1169,7 +1167,7 @@ class KnownNoiseLogLikelihood(GaussianKnownSigmaLogLikelihood):
         warnings.warn(
             'The class `pints.KnownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianKnownSigmaLogLikelihood` instead.')
-        super(KnownNoiseLogLikelihood, self).__init__(problem, sigma)
+        super().__init__(problem, sigma)
 
 
 class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
@@ -1214,7 +1212,7 @@ class LogNormalLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem, mean_adjust=False):
-        super(LogNormalLogLikelihood, self).__init__(problem)
+        super().__init__(problem)
 
         # Get number of times, number of outputs
         self._nt = len(self._times)
@@ -1352,7 +1350,7 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem):
-        super(MultiplicativeGaussianLogLikelihood, self).__init__(problem)
+        super().__init__(problem)
 
         # Get number of times and number of outputs
         self._nt = len(self._times)
@@ -1407,15 +1405,12 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, log_likelihood):
+        super().__init__(log_likelihood._problem)
+
         # Check arguments
         if not isinstance(log_likelihood, pints.ProblemLogLikelihood):
             raise ValueError(
                 'Given log_likelihood must extend pints.ProblemLogLikelihood')
-
-        # Call parent constructor
-        super(ScaledLogLikelihood, self).__init__(log_likelihood._problem)
-
-        # Store log-likelihood
         self._log_likelihood = log_likelihood
 
         # Pre-calculate parts
@@ -1465,7 +1460,7 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, problem):
-        super(StudentTLogLikelihood, self).__init__(problem)
+        super().__init__(problem)
 
         # Get number of times, number of outputs
         self._nt = len(self._times)
@@ -1515,4 +1510,5 @@ class UnknownNoiseLogLikelihood(GaussianLogLikelihood):
         warnings.warn(
             'The class `pints.UnknownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianLogLikelihood` instead.')
-        super(UnknownNoiseLogLikelihood, self).__init__(problem)
+        super().__init__(problem)
+

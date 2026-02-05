@@ -55,7 +55,7 @@ class CMAES(pints.PopulationBasedOptimiser):
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):
-        super(CMAES, self).__init__(x0, sigma0, boundaries)
+        super().__init__(x0, sigma0, boundaries)
 
         # 1-D is not supported
         if len(x0) < 2:

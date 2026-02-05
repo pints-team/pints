@@ -1128,8 +1128,7 @@ class MCMCSampling(MCMCController):
         warnings.warn(
             'The class `pints.MCMCSampling` is deprecated.'
             ' Please use `pints.MCMCController` instead.')
-        super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0,
-                                           transformation, method=method)
+        super().__init__(log_pdf, chains, x0, sigma0, transformation, method)
 
 
 def mcmc_sample(log_pdf, chains, x0, sigma0=None, transformation=None,

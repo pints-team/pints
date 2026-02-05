@@ -1196,7 +1196,7 @@ class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
         A :class:`pints.Transformation`.
     """
     def __init__(self, log_prior, transformation):
-        super(TransformedLogPrior, self).__init__(log_prior, transformation)
+        super().__init__(log_prior, transformation)
 
     def sample(self, n):
         """

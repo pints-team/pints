@@ -36,7 +36,7 @@ class SimpleHarmonicOscillatorModel(pints.ForwardModelS1, ToyModel):
     .. [1] https://en.wikipedia.org/wiki/Simple_harmonic_motion
     """
     def __init__(self):
-        super(SimpleHarmonicOscillatorModel, self).__init__()
+        super().__init__()
 
     def n_parameters(self):
         """ See :meth:`pints.ForwardModel.n_parameters()`. """

@@ -47,8 +47,7 @@ class LogisticModel(MarkovJumpModel):
     def __init__(self, initial_molecule_count=50):
         V = [[1]]
         init_list = [initial_molecule_count]
-        super(LogisticModel, self).__init__(init_list,
-                                            V, self._propensities)
+        super().__init__(init_list, V, self._propensities)
 
     def n_parameters(self):
         """

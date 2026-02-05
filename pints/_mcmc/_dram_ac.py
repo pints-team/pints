@@ -59,7 +59,7 @@ class DramACMC(pints.AdaptiveCovarianceMC):
            https://doi.org/10.1007/s11222-006-9438-0
     """
     def __init__(self, x0, sigma0=None):
-        super(DramACMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
 
         self._log_lambda = 0
         self._n_kernels = 2  # This is fixed!

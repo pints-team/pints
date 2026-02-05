@@ -79,7 +79,7 @@ class HodgkinHuxleyIKModel(pints.ForwardModel, ToyModel):
 
     """
     def __init__(self, initial_condition=0.3):
-        super(HodgkinHuxleyIKModel, self).__init__()
+        super().__init__()
 
         # Initial conditions
         self._n0 = float(initial_condition)

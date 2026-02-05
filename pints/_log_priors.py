@@ -1053,7 +1053,7 @@ class NormalLogPrior(GaussianLogPrior):
         warnings.warn(
             'The class `pints.NormalLogPrior` is deprecated.'
             ' Please use `pints.GaussianLogPrior` instead.')
-        super(NormalLogPrior, self).__init__(mean, standard_deviation)
+        super().__init__(mean, standard_deviation)
 
 
 class StudentTLogPrior(pints.LogPrior):

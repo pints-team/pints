@@ -65,7 +65,7 @@ class DreamMCMC(pints.MultiChainMCMC):
     """
 
     def __init__(self, chains, x0, sigma0=None):
-        super(DreamMCMC, self).__init__(chains, x0, sigma0)
+        super().__init__(chains, x0, sigma0)
 
         # Need at least 3 chains
         if self._n_chains < 3:

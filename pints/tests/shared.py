@@ -24,7 +24,7 @@ class StreamCapture(object):
     Warning: This class is not thread-safe.
     """
     def __init__(self, stdout=True, stderr=False):
-        super(StreamCapture, self).__init__()
+        super().__init__()
 
         # True if currently capturing
         self._capturing = False
@@ -146,7 +146,7 @@ class SubCapture(object):
     Warning: This class is not thread-safe.
     """
     def __init__(self, dump_on_error=False):
-        super(SubCapture, self).__init__()
+        super().__init__()
         self._capturing = False
         self._captured = []
         self._dump_on_error = bool(dump_on_error)
@@ -294,7 +294,7 @@ class TemporaryDirectory(object):
     exited.
     """
     def __init__(self):
-        super(TemporaryDirectory, self).__init__()
+        super().__init__()
         self._dir = None
 
     def __enter__(self):
@@ -353,7 +353,7 @@ class CircularBoundaries(pints.Boundaries):
         The radius (in all directions).
     """
     def __init__(self, center, radius=1):
-        super(CircularBoundaries, self).__init__()
+        super().__init__()
 
         # Check arguments
         center = pints.vector(center)

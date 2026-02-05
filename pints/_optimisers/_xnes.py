@@ -36,7 +36,7 @@ class XNES(pints.PopulationBasedOptimiser):
 
     """
     def __init__(self, x0, sigma0=None, boundaries=None):
-        super(XNES, self).__init__(x0, sigma0, boundaries)
+        super().__init__(x0, sigma0, boundaries)
 
         # Set initial state
         self._running = False

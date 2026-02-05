@@ -72,7 +72,7 @@ class SIRModel(pints.ForwardModel, ToyModel):
     """
 
     def __init__(self, y0=None):
-        super(SIRModel, self).__init__()
+        super().__init__()
 
         # Check initial values
         if y0 is None:

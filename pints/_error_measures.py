@@ -54,7 +54,7 @@ class ProblemErrorMeasure(ErrorMeasure):
     :class:`multi-output<pints.MultiOutputProblem>` problems.
     """
     def __init__(self, problem):
-        super(ProblemErrorMeasure, self).__init__()
+        super().__init__()
         self._problem = problem
         self._times = problem.times()
         self._values = problem.values()
@@ -96,7 +96,7 @@ class MeanSquaredError(ProblemErrorMeasure):
 
     """
     def __init__(self, problem, weights=None):
-        super(MeanSquaredError, self).__init__(problem)
+        super().__init__(problem)
         self._ninv = 1.0 / np.prod(self._values.shape)
 
         if weights is None:
@@ -147,7 +147,7 @@ class NormalisedRootMeanSquaredError(ProblemErrorMeasure):
         A :class:`pints.SingleOutputProblem`.
     """
     def __init__(self, problem):
-        super(NormalisedRootMeanSquaredError, self).__init__(problem)
+        super().__init__(problem)
 
         if not isinstance(problem, pints.SingleOutputProblem):
             raise ValueError(
@@ -174,7 +174,7 @@ class ProbabilityBasedError(ErrorMeasure):
         The LogPDF to base this error on.
     """
     def __init__(self, log_pdf):
-        super(ProbabilityBasedError, self).__init__()
+        super().__init__()
         if not isinstance(log_pdf, pints.LogPDF):
             raise ValueError(
                 'Given log_pdf must be an instance of pints.LogPDF.')
@@ -216,7 +216,7 @@ class RootMeanSquaredError(ProblemErrorMeasure):
         A :class:`pints.SingleOutputProblem`.
     """
     def __init__(self, problem):
-        super(RootMeanSquaredError, self).__init__(problem)
+        super().__init__(problem)
 
         if not isinstance(problem, pints.SingleOutputProblem):
             raise ValueError(
@@ -271,7 +271,7 @@ class SumOfErrors(ErrorMeasure):
 
     """
     def __init__(self, error_measures, weights=None):
-        super(SumOfErrors, self).__init__()
+        super().__init__()
 
         # Check input arguments
         if len(error_measures) < 1:
@@ -360,7 +360,7 @@ class SumOfSquaresError(ProblemErrorMeasure):
 
     """
     def __init__(self, problem, weights=None):
-        super(SumOfSquaresError, self).__init__(problem)
+        super().__init__(problem)
 
         if weights is None:
             weights = [1] * self._n_outputs

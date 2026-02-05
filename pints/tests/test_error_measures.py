@@ -54,7 +54,7 @@ class MultiMiniProblem(pints.MultiOutputProblem):
 
 class BigMiniProblem(MiniProblem):
     def __init__(self):
-        super(BigMiniProblem, self).__init__()
+        super().__init__()
         self._t = pints.vector([1, 2, 3, 4, 5, 6])
         self._v = pints.vector([-1, 2, 3, 4, 5, -6])
 
@@ -64,7 +64,7 @@ class BigMiniProblem(MiniProblem):
 
 class BadMiniProblem(MiniProblem):
     def __init__(self, bad_value=np.inf):
-        super(BadMiniProblem, self).__init__()
+        super().__init__()
         self._v = pints.vector([bad_value, 2, -3])
 
     def n_parameters(self):
@@ -73,7 +73,7 @@ class BadMiniProblem(MiniProblem):
 
 class BadErrorMeasure(pints.ErrorMeasure):
     def __init__(self, bad_value=-np.inf):
-        super(BadErrorMeasure, self).__init__()
+        super().__init__()
         self._v = bad_value
 
     def n_parameters(self):

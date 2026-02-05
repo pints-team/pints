@@ -75,7 +75,7 @@ class SliceRankShrinkingMCMC(pints.SingleChainMCMC):
     """
 
     def __init__(self, x0, sigma0=None):
-        super(SliceRankShrinkingMCMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
 
         # Set initial state
         self._x0 = np.asarray(x0, dtype=float)

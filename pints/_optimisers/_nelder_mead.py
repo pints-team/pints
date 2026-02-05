@@ -129,7 +129,7 @@ class NelderMead(pints.Optimiser):
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):
-        super(NelderMead, self).__init__(x0, sigma0, boundaries)
+        super().__init__(x0, sigma0, boundaries)
 
         if self._boundaries is not None:
             warnings.warn(

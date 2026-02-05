@@ -20,7 +20,7 @@ class ForwardModel(object):
     """
 
     def __init__(self):
-        super(ForwardModel, self).__init__()
+        super().__init__()
 
     def n_parameters(self):
         """
@@ -67,7 +67,7 @@ class ForwardModelS1(ForwardModel):
     """
 
     def __init__(self):
-        super(ForwardModelS1, self).__init__()
+        super().__init__()
 
     def simulateS1(self, parameters, times):
         """

@@ -17,7 +17,7 @@ class TestEvaluators(unittest.TestCase):
     Tests the evaluator classes and methods.
     """
     def __init__(self, name):
-        super(TestEvaluators, self).__init__(name)
+        super().__init__(name)
 
     def test_function(self):
 

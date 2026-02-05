@@ -106,7 +106,7 @@ class NestedEllipsoidSampler(pints.NestedSampler):
     """
 
     def __init__(self, log_prior):
-        super(NestedEllipsoidSampler, self).__init__(log_prior)
+        super().__init__(log_prior)
 
         # Gaps between updating ellipsoid
         self.set_ellipsoid_update_gap()
