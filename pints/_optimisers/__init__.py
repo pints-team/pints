@@ -622,6 +622,10 @@ class OptimisationController(object):
             pop_size = 1
             if isinstance(self._optimiser, PopulationBasedOptimiser):
                 pop_size = self._optimiser.population_size()
+                if pop_size is None:
+                    pop_size = self._optimiser.suggested_population_size(
+                        n_workers if self._parallel else None)
+                    self._optimiser.set_population_size(pop_size)
                 if self._log_to_screen:
                     print('Population size: ' + str(pop_size))
 
