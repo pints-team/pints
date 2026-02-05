@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
-- [#1724](https://github.com/pints-team/pints/pull/1724) Reintroduced the `LogLikelihood` class, to differentiate between probabilities of parameters and probabilities of data.
+- [#1724](https://github.com/pints-team/pints/pull/1724) The `LogLikelihood` class has been reintroduced, to differentiate between probabilities of parameters and probabilities of data, given fixed parameters.
 - [#1724](https://github.com/pints-team/pints/pull/1724) Added `PooledLogLikelihood` and `SumOfIndependentLogLikelihoods`.
 - [#1716](https://github.com/pints-team/pints/pull/1716) PINTS is now tested on Python 3.14.
 - [#1715](https://github.com/pints-team/pints/pull/1715) Added methods `ProblemErrorMeasure.problem()`, `ProblemLogLikelihood.problem()`, `SingleOutputProblem.model()` and `MultiOutputProblem.model()`.
