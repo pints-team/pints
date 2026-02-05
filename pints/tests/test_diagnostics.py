@@ -7,8 +7,11 @@
 # copyright notice and full license details.
 #
 import unittest
-import pints
+import warnings
+
 import numpy as np
+
+import pints
 import pints._diagnostics
 
 
@@ -58,7 +61,7 @@ class TestDiagnostics(unittest.TestCase):
         # matrix with two columns of samples
         x = np.transpose(np.array([[1.0, 1.1, 1.4, 1.3, 1.3],
                                    [1.0, 2.0, 3.0, 4.0, 5.0]]))
-        y = pints._diagnostics.effective_sample_size(x)
+        y = pints.effective_sample_size(x)
         self.assertAlmostEqual(y[0], 1.439232, 6)
         self.assertAlmostEqual(y[1], 1.315789, 6)
 
@@ -91,7 +94,7 @@ class TestDiagnostics(unittest.TestCase):
         chains = np.array([[1.0, 1.1, 1.4, 1.3],
                           [1.0, 2.0, 3.0, 4.0]])
         self.assertAlmostEqual(
-            pints._diagnostics.rhat(chains), 2.3303847470550716, 6)
+            pints.rhat(chains), 2.3303847470550716, 6)
 
         # Test Rhat computation for two parameters, chains.shape=(3, 4, 2)
         chains = np.array([
@@ -114,7 +117,7 @@ class TestDiagnostics(unittest.TestCase):
                 [0.89531238, 0.63207977]
             ]])
 
-        y = pints._diagnostics.rhat(chains)
+        y = pints.rhat(chains)
         d = np.array(y) - np.array([0.84735944450487122, 1.1712652416950846])
         self.assertLess(np.linalg.norm(d), 0.01)
 
@@ -124,40 +127,27 @@ class TestDiagnostics(unittest.TestCase):
 
         # Pass chain of dimension 1
         chains = np.empty(shape=1)
-        message = (
-            'Dimension of chains is 1. '
-            + 'Method computes Rhat for one '
-            'or multiple parameters and therefore only accepts 2 or 3 '
-            'dimensional arrays.')
         self.assertRaisesRegex(
-            ValueError, message[0], pints.rhat, chains)
+            ValueError, 'only accepts 2 or 3 dimensional', pints.rhat, chains)
 
         # Pass chain of dimension 4
         chains = np.empty(shape=(1, 1, 1, 1))
-        message = (
-            'Dimension of chains is 4. '
-            + 'Method computes Rhat for one '
-            'or multiple parameters and therefore only accepts 2 or 3 '
-            'dimensional arrays.')
         self.assertRaisesRegex(
-            ValueError, message[0], pints.rhat, chains)
+            ValueError, 'only accepts 2 or 3 dimensional', pints.rhat, chains)
+
+        # Pass only a single chain
+        chains = np.empty(shape=(1, 5))
+        self.assertRaisesRegex(
+            ValueError, 'only accepts 2 or 3 dimensional', pints.rhat, chains)
 
         # Pass bad warm-up arguments
         chains = np.empty(shape=(2, 4))
 
-        # warm-up greater than 100%
-        warm_up = 1.1
-        message = (
-            '`warm_up` is set to 1.1. `warm_up` only takes values in [0,1].')
+        # warm-up greater than 100% or negative
         self.assertRaisesRegex(
-            ValueError, message[0], pints.rhat, chains, warm_up)
-
-        # Negative warm-up
-        warm_up = -0.1
-        message = (
-            '`warm_up` is set to -0.1. `warm_up` only takes values in [0,1].')
+            ValueError, r'takes values in \[0,1\]', pints.rhat, chains, 1.1)
         self.assertRaisesRegex(
-            ValueError, message[0], pints.rhat, chains, warm_up)
+            ValueError, r'takes values in \[0,1\]', pints.rhat, chains, -0.1)
 
         # Pass chains with too little samples (n<4)
         chains = np.empty(shape=(1, 4))
@@ -168,8 +158,7 @@ class TestDiagnostics(unittest.TestCase):
         self.assertRaisesRegex(
             ValueError, message[0], pints.rhat, chains, warm_up)
 
-    def test_rhat_all_params(self):
-        # Tests that rhat_all works
+    def test_rhat_deprecated_alias(self):
 
         x = np.array([[[-1.10580535, 2.26589882],
                        [0.35604827, 1.03523364],
@@ -184,9 +173,10 @@ class TestDiagnostics(unittest.TestCase):
                        [0.92272047, -1.49997615],
                        [0.89531238, 0.63207977]]])
 
-        y = pints._diagnostics.rhat_all_params(x)
-        d = np.array(y) - np.array([0.84735944450487122, 1.1712652416950846])
-        self.assertLess(np.linalg.norm(d), 0.01)
+        with warnings.catch_warnings(record=True) as w:
+            z = pints.rhat_all_params(x)
+        self.assertIn('deprecated', str(w[-1].message))
+        self.assertEqual(list(pints.rhat(x)), list(z))
 
 
 if __name__ == '__main__':
