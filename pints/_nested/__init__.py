@@ -233,9 +233,9 @@ class NestedController():
 
     Parameters
     ----------
-    log_likelihood : pints.LogPDF
-        A :class:`LogPDF` function that evaluates points in the parameter
-        space.
+    log_likelihood : pints.LogLikelihood
+        A :class:`LogLikelihood` function that evaluates points in the
+        parameter space.
     log_prior : pints.LogPrior
         A :class:`LogPrior` function on the same parameter space.
 
@@ -253,8 +253,7 @@ class NestedController():
     def __init__(self, log_likelihood, log_prior, method=None):
 
         # Store log_likelihood and log_prior
-        # if not isinstance(log_likelihood, pints.LogLikelihood):
-        if not isinstance(log_likelihood, pints.LogPDF):
+        if not isinstance(log_likelihood, pints.LogLikelihood):
             raise ValueError(
                 'Given log_likelihood must extend pints.LogLikelihood')
         self._log_likelihood = log_likelihood

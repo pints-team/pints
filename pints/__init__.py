@@ -79,12 +79,11 @@ from ._logger import Logger, Loggable
 # Logs of probability density functions (not necessarily normalised)
 #
 from ._log_pdfs import (
+    LogLikelihood,
     LogPDF,
     LogPrior,
     LogPosterior,
-    PooledLogPDF,
     ProblemLogLikelihood,
-    SumOfIndependentLogPDFs,
 )
 
 #
@@ -124,8 +123,12 @@ from ._log_likelihoods import (
     KnownNoiseLogLikelihood,
     LogNormalLogLikelihood,
     MultiplicativeGaussianLogLikelihood,
+    PooledLogLikelihood,
+    PooledLogPDF,
     ScaledLogLikelihood,
     StudentTLogLikelihood,
+    SumOfIndependentLogLikelihoods,
+    SumOfIndependentLogPDFs,
     UnknownNoiseLogLikelihood,
 )
 
