@@ -15,12 +15,12 @@ All notable changes to this project will be documented in this file.
 - [#1724](https://github.com/pints-team/pints/pull/1724) Some methods that accepted `LogPDF`s now specifically require `LogLikelihood`s (e.g. `LogPosterior`, `NestedController`).
 - [#1713](https://github.com/pints-team/pints/pull/1713) PINTS now requires matplotlib 2.2 or newer.
 ### Deprecated
-- [#1508](https://github.com/pints-team/pints/pull/1508) The methods `OptimisationController.max_unchanged_iterations` and `set_max_unchanged_iterations` are deprecated, in favour of `function_tolerance` and `set_function_tolerance` respectively.
 - [#1724](https://github.com/pints-team/pints/pull/1724) The classes `PooledLogPDF` and `SumOfIndependentLogPDFs` are deprecated, in favour of `PooledLogLikelihood` and `SumOfIndependentLogLikelihoods` respectively.
+- [#1508](https://github.com/pints-team/pints/pull/1508) The methods `OptimisationController.max_unchanged_iterations` and `set_max_unchanged_iterations` are deprecated, in favour of `function_tolerance` and `set_function_tolerance` respectively.
 ### Removed
 ### Fixed
 - [#1713](https://github.com/pints-team/pints/pull/1713) Fixed Numpy 2.4.1 compatibility issues.
-- [#1690][https://github.com/pints-team/pints/pull/1690) Fixed bug in optimisation controller if population size left at `None`.
+- [#1690](https://github.com/pints-team/pints/pull/1690) Fixed bug in optimisation controller if population size left at `None`.
 
 
 ## [0.5.1] - 2025-09-26
