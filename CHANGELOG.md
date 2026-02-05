@@ -4,8 +4,8 @@ All notable changes to this project will be documented in this file.
 
 
 ## Unreleased
-
 ### Added
+- [#1730](https://github.com/pints-team/pints/pull/1730) Added a `TransformedLogLikelihood` class which, unlike generic `TransformedLogPDF` objects, is invariant with respect to the parameters.
 - [#1724](https://github.com/pints-team/pints/pull/1724) The `LogLikelihood` class has been reintroduced, to differentiate between probabilities of parameters and probabilities of data, given fixed parameters.
 - [#1724](https://github.com/pints-team/pints/pull/1724) Added `PooledLogLikelihood` and `SumOfIndependentLogLikelihoods`.
 - [#1716](https://github.com/pints-team/pints/pull/1716) PINTS is now tested on Python 3.14.
@@ -15,10 +15,12 @@ All notable changes to this project will be documented in this file.
 - [#1724](https://github.com/pints-team/pints/pull/1724) Some methods that accepted `LogPDF`s now specifically require `LogLikelihood`s (e.g. `LogPosterior`, `NestedController`).
 - [#1713](https://github.com/pints-team/pints/pull/1713) PINTS now requires matplotlib 2.2 or newer.
 ### Deprecated
+- [#1730](https://github.com/pints-team/pints/pull/1730) The method `Transformation.convert_log_prior` is deprecated, as `convert_log_pdf` now calls the appropriate method based on the type of `LogPDF` passed in.
 - [#1724](https://github.com/pints-team/pints/pull/1724) The classes `PooledLogPDF` and `SumOfIndependentLogPDFs` are deprecated, in favour of `PooledLogLikelihood` and `SumOfIndependentLogLikelihoods` respectively.
 - [#1508](https://github.com/pints-team/pints/pull/1508) The methods `OptimisationController.max_unchanged_iterations` and `set_max_unchanged_iterations` are deprecated, in favour of `function_tolerance` and `set_function_tolerance` respectively.
 ### Removed
 ### Fixed
+- [#1730](https://github.com/pints-team/pints/pull/1730) Log-likelihoods are now transformed correctly.
 - [#1713](https://github.com/pints-team/pints/pull/1713) Fixed Numpy 2.4.1 compatibility issues.
 - [#1690](https://github.com/pints-team/pints/pull/1690) Fixed bug in optimisation controller if population size left at `None`.
 
