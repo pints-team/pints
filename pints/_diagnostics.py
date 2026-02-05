@@ -218,7 +218,6 @@ def rhat(chains, warm_up=0.0):
             'Number of samples per chain after warm-up and chain splitting is '
             f'{n}. Method needs at least 2 samples per chain.')
 
-
     # Exclude warm-up
     chains = chains[:, int(n * warm_up):]
 
