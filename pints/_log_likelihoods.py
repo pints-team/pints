@@ -1386,6 +1386,216 @@ class MultiplicativeGaussianLogLikelihood(pints.ProblemLogLikelihood):
         return log_likelihood
 
 
+class PooledLogLikelihood(pints.LogLikelihood):
+    r"""
+    Combines :math:`m` :class:`LogLikelihoods<pints.LogLikelihood>`, each with
+    :math:`n` parameters, into a single LogLikelihood where :math:`k`
+    parameters are "pooled" (i.e. have the same value for each LogLikelihood),
+    so that the resulting combined LogLikelihood has :math:`m (n - k) + k`
+    independent parameters.
+
+    This is useful for e.g. modelling the time-series of multiple individuals
+    (each individual defines a separate :class:`LogLikelihood`), and some
+    parameters are expected to be the same across individuals (for example, the
+    noise parameter across different individuals within the same experiment).
+
+    For two :class:`LogLikelihoods<pints.LogLikelihood>` :math:`L _1` and
+    :math:`L _2` with four parameters
+    :math:`(\psi ^{(1)}_1, \psi ^{(1)}_2, \psi ^{(1)}_3, \psi ^{(1)}_4)`
+    and
+    :math:`(\psi ^{(2)}_1, \psi ^{(2)}_2, \psi ^{(2)}_3, \psi ^{(2)}_4)`
+    respectively, a pooling of the second and third parameter
+    :math:`\psi _2 := \psi ^{(1)}_2 = \psi ^{(2)}_2`,
+    :math:`\psi _3 := \psi ^{(1)}_3 = \psi ^{(2)}_3` results in a pooled
+    log-likelihood of the form
+
+    .. math::
+        L(\psi ^{(1)}_1, \psi ^{(1)}_4, \psi ^{(2)}_1, \psi ^{(2)}_4, \psi _2,
+                \psi _3 | D_1, D_2) =
+            L _1(\psi ^{(1)}_1, \psi _2, \psi _3, \psi ^{(1)}_4 | D_1) +
+            L _2(\psi ^{(2)}_1, \psi _2, \psi _3, \psi ^{(2)}_4 | D_2),
+
+    :math:`D_i` is the measured time-series of individual :math:`i`. As
+    :math:`k=2` parameters where pooled across the log-likelihoods, the
+    pooled log-likelihood has six parameters in the following order:
+    :math:`(\psi ^{(1)}_1, \psi ^{(1)}_4, \psi ^{(2)}_1, \psi ^{(2)}_4,
+    \psi _2, \psi _3)`.
+
+    Note that the input parameters of a :class:`PooledLogLikelihood` are not
+    just a simple concatenation of the parameters of the individual
+    :class:`LogLikelihoods<pints.LogLikelihood>`. The pooled parameters are
+    only listed once and are moved to the end of the parameter list. This
+    avoids inputting the value of the pooled parameters at mutliple positions.
+    Otherwise the order of the parameters is determined firstly by the order of
+    the likelihoods and then by the order of the parameters of those
+    likelihoods.
+
+    Extends :class:`LogLikelihood`.
+
+    Parameters
+    ----------
+    log_likelihoods
+        A sequence of :class:`LogLikelihood` objects.
+    pooled
+        A sequence of booleans indicating which parameters across
+        the likelihoods are pooled (``True``) or remain unpooled (``False``).
+
+    Example
+    -------
+    ::
+
+        pooled_log_likelihood = pints.PooledLogLikelihood(
+            log_likelihoods=[
+                pints.GaussianLogLikelihood(problem1),
+                pints.GaussianLogLikelihood(problem2)],
+            pooled=[False, True])
+    """
+    def __init__(self, log_likelihoods, pooled):
+        super().__init__()
+
+        # Check input arguments
+        if len(log_likelihoods) < 2:
+            raise ValueError(
+                'PooledLogLikelihood requires at least two log-likelihoods.')
+        for index, log_likelihood in enumerate(log_likelihoods):
+            if not isinstance(log_likelihood, pints.LogLikelihood):
+                raise ValueError(
+                    'All log-likelihoods passed to PooledLogLikelihood must be'
+                    ' instances of pints.LogLikelihood (failed on argument'
+                    f' {index} of type {type(log_likelihood)}).')
+
+        # Check parameter dimension across log-log_likelihoods
+        self._log_likelihoods = log_likelihoods
+        n_parameters = self._log_likelihoods[0].n_parameters()
+        for log_likelihood in self._log_likelihoods:
+            if log_likelihood.n_parameters() != n_parameters:
+                raise ValueError(
+                    'All log-likelihoods passed to PooledLogLikelihoods must'
+                    ' have same dimension.')
+
+        # Check that pooled matches number of parameters
+        self._pooled = np.asarray(pooled)
+        if len(self._pooled) != n_parameters:
+            raise ValueError(
+                'The array-like input `pooled` needs to have the same length '
+                'as the number of parameters of the individual'
+                ' log-likelihoods.')
+
+        # Check that pooled contains only booleans
+        if self._pooled.dtype != np.dtype('bool'):
+            raise ValueError(
+                'The array-like input `pooled` passed to PooledLogLikelihood '
+                'has to contain booleans exclusively.')
+
+        # Get dimension of search space
+        self._n_pooled = np.sum(self._pooled)
+        n_individuals = len(self._log_likelihoods)
+        self._n_unpooled = np.sum(~self._pooled)
+        self._n_parameters = \
+            self._n_pooled + n_individuals * self._n_unpooled
+
+    def __call__(self, parameters):
+        # Get parameters of pooled log-likelihood
+        parameters = np.asarray(parameters)
+
+        # Create container for parameters of individuals log-likelihood and
+        # fill with pooled parameters
+        params_ind = np.empty(shape=self._n_unpooled + self._n_pooled)
+        if self._n_pooled > 0:
+            params_ind[self._pooled] = parameters[
+                self._n_parameters - self._n_pooled:self._n_parameters]
+
+        # Compute likelihood
+        total = 0
+        for idx, log_likelihood in enumerate(self._log_likelihoods):
+            # Get unpooled parameters for individual
+            params_ind[~self._pooled] = parameters[
+                idx * self._n_unpooled: (idx + 1) * self._n_unpooled]
+
+            # Compute likelihood score contribution
+            total += log_likelihood(params_ind)
+        return total
+
+    def evaluateS1(self, parameters):
+        r"""
+        See :meth:`LogPDF.evaluateS1()`.
+
+        The partial derivatives of the pooled log-likelihood with respect to
+        unpooled parameters equals the partial derivative of the corresponding
+        indiviudal log-likelihood.
+
+        .. math::
+            \frac{\partial L}{\partial \psi} =
+            \frac{\partial L_i}{\partial \psi},
+
+        where :math:`L` is the pooled log-likelihood, :math:`\psi` an unpooled
+        parameter and :math:`L _i` the individual log-likelihood that depends
+        on :math:`\psi`.
+
+        For a pooled parameter :math:`\theta` the partial derivative of the
+        pooled log-likelihood equals to the sum of partial derivatives of all
+        individual log-likelihoods
+
+        .. math::
+            \frac{\partial L}{\partial \theta} =
+            \sum _{i=1}^n\frac{\partial L_i}{\partial \theta}.
+
+        Here :math:`n` is the number of individual log-likelihoods.
+
+        *This method only works if all the underlying :class:`LogLikelihood`
+        objects implement the optional method :meth:`LogPDF.evaluateS1()`!*
+        """
+        # Get parameters of pooled log-likelihood
+        parameters = np.asarray(parameters)
+
+        # Create container for parameters of individuals log-likelihood and
+        # fill with pooled parameters
+        params_ind = np.empty(shape=self._n_unpooled + self._n_pooled)
+        if self._n_pooled > 0:
+            params_ind[self._pooled] = parameters[
+                self._n_parameters - self._n_pooled:self._n_parameters]
+
+        # Compute likelihood score and partials
+        total = 0
+        dtotal = np.zeros(shape=self._n_parameters)
+        for idx, log_likelihood in enumerate(self._log_likelihoods):
+            # Get unpooled parameters for individual
+            params_ind[~self._pooled] = parameters[
+                idx * self._n_unpooled: (idx + 1) * self._n_unpooled]
+
+            # Compute likelihood score and partials for individual
+            score, partials = log_likelihood.evaluateS1(params_ind)
+
+            # Add contributions to score and partials.
+            # NOTE: Partials of unpooled parameters equal partials of the
+            # associated individual likelihood; Partials of pooled parameters
+            # equals to the sum of partials from the individual likelihoods
+            # with respect to that parameter.
+            total += score
+            dtotal[idx * self._n_unpooled: (idx + 1) * self._n_unpooled] = \
+                partials[~self._pooled]
+            if self._n_pooled > 0:
+                dtotal[-self._n_pooled:] += partials[self._pooled]
+
+        return total, dtotal
+
+    def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
+        return self._n_parameters
+
+
+class PooledLogPDF(PooledLogLikelihood):
+    """ Deprecated alias of :class:`pints.PooledLogLikelihood`. """
+    # Deprecated on 2026-02-05
+
+    def __init__(self, log_pdfs, pooled):
+        import warnings
+        warnings.warn(
+            'The class `pints.PooledLogPDF` is deprecated.'
+            ' Please use `pints.PooledLogLikelihood` instead.')
+        super().__init__(log_pdfs, pooled)
+
+
 class ScaledLogLikelihood(pints.ProblemLogLikelihood):
     """
     Calculates a log-likelihood based on a (conditional)
@@ -1424,7 +1634,7 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
         """
         See :meth:`LogPDF.evaluateS1()`.
 
-        This method only works if the underlying :class:`LogPDF` object
+        This method only works if the underlying :class:`LogLikelihood` object
         implements the optional method :meth:`LogPDF.evaluateS1()`!
         """
         a, b = self._log_likelihood.evaluateS1(x)
@@ -1498,6 +1708,97 @@ class StudentTLogLikelihood(pints.ProblemLogLikelihood):
             - n * np.log(scipy.special.beta(0.5 * nu, 0.5))
             - 0.5 * (1 + nu) * np.sum(np.log(nu + (error / sigma)**2), axis=0)
         )
+
+
+class SumOfIndependentLogLikelihoods(pints.LogLikelihood):
+    """
+    Calculates a sum of :class:`LogLikelihood` objects, all defined on the same
+    parameter space.
+
+    This is useful for e.g. Bayesian inference using a single model evaluated
+    on two **independent** data sets ``D`` and ``E``. In this case,
+
+    .. math::
+        f(\\theta|D,E) &= \\frac{f(D, E|\\theta)f(\\theta)}{f(D, E)} \\\\
+                       &= \\frac{f(D|\\theta)f(E|\\theta)f(\\theta)}{f(D, E)}
+
+    Extends :class:`pints.LogLikelihood`.
+
+    Parameters
+    ----------
+    log_likelihoods
+        A sequence of :class:`LogLikelihood` objects.
+
+    Example
+    -------
+    ::
+
+        log_likelihood = pints.SumOfIndependentLogLikelihoods([
+            pints.GaussianLogLikelihood(problem1),
+            pints.GaussianLogLikelihood(problem2),
+        ])
+    """
+    def __init__(self, log_likelihoods):
+        super().__init__()
+
+        # Check input arguments
+        if len(log_likelihoods) < 2:
+            raise ValueError('SumOfIndependentLogLikelihoods requires at least'
+                             ' two log-likelihoods.')
+        for i, e in enumerate(log_likelihoods):
+            if not isinstance(e, pints.LogLikelihood):
+                raise ValueError(
+                    'All objects passed to SumOfIndependentLogLikelihoods must'
+                    ' be instances of pints.LogLikelihood (failed on argument'
+                    f' {i} of type {type(e)}.')
+        self._log_likelihoods = list(log_likelihoods)
+
+        # Get and check dimension
+        i = iter(self._log_likelihoods)
+        self._n_parameters = next(i).n_parameters()
+        for e in i:
+            if e.n_parameters() != self._n_parameters:
+                raise ValueError(
+                    'All log-likelihoods passed to'
+                    ' SumOfIndependentLogLogLikelihoods must have the same'
+                    ' dimension.')
+
+    def __call__(self, x):
+        total = 0
+        for e in self._log_likelihoods:
+            total += e(x)
+        return total
+
+    def evaluateS1(self, x):
+        """
+        See :meth:`LogPDF.evaluateS1()`.
+
+        *This method only works if all the underlying :class:`LogLikelihood`
+        objects implement the optional method :meth:`LogPDF.evaluateS1()`.*
+        """
+        total = 0
+        dtotal = np.zeros(self._n_parameters)
+        for e in self._log_likelihoods:
+            a, b = e.evaluateS1(x)
+            total += a
+            dtotal += np.asarray(b)
+        return total, dtotal
+
+    def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
+        return self._n_parameters
+
+
+class SumOfIndependentLogPDFs(SumOfIndependentLogLikelihoods):
+    """ Deprecated alias of :class:`pints.SumOfIndependentLogLikelihoods`. """
+    # Deprecated on 2026-02-05
+
+    def __init__(self, log_likelihoods):
+        import warnings
+        warnings.warn(
+            'The class `pints.SumOfIndependentLogPDFs` is deprecated.'
+            ' Please use `pints.SumOfIndependentLogLikelihoods` instead.')
+        super().__init__(log_likelihoods)
 
 
 class UnknownNoiseLogLikelihood(GaussianLogLikelihood):

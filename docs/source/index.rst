@@ -95,8 +95,8 @@ Sampling
    - :class:`No U-Turn Sampler with dual averaging (NUTS) <NoUTurnMCMC>`
    - :class:`RelativisticMCMC`
 
-#. :class:`Nested sampling<NestedSampler>`, require a :class:`LogPDF` and a
-   :class:`LogPrior` that can be sampled from.
+#. :class:`Nested sampling<NestedSampler>`, require a :class:`LogLikelihood`
+   and a :class:`LogPrior` that can be sampled from.
 
    - :class:`NestedEllipsoidSampler`
    - :class:`NestedRejectionSampler`
