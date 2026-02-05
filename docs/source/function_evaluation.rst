@@ -18,14 +18,6 @@ Example::
         ]
     fx = e.evaluate(x)
 
-Overview:
-
-- :func:`evaluate`
-- :class:`Evaluator`
-- :class:`ParallelEvaluator`
-- :class:`SequentialEvaluator`
-- :class:`MultiSequentialEvaluator`
-
 
 .. autofunction:: evaluate
 

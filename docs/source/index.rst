@@ -3,6 +3,8 @@
 .. _GitHub: https://github.com/pints-team/pints
 .. _Detailed examples: https://github.com/pints-team/pints/blob/main/examples/README.md
 
+.. module:: pints
+
 Welcome to the pints documentation
 ==================================
 
@@ -16,114 +18,23 @@ Welcome to the pints documentation
 * :ref:`genindex`
 * :ref:`search`
 
-Contents
-========
-
-.. module:: pints
-
-.. toctree::
-
-    abc_samplers/index
-    boundaries
-    core_classes_and_methods
-    diagnostics
-    diagnostic_plots
-    error_measures
-    function_evaluation
-    io
-    log_likelihoods
-    log_pdfs
-    log_priors
-    mcmc_samplers/index
-    nested_samplers/index
-    noise_generators
-    optimisers/index
-    noise_model_diagnostics
-    toy/index
-    toy/stochastic/index
-    transformations
-    utilities
-
-Hierarchy of methods
-====================
-
-Pints contains different types of methods, that can be roughly arranged into a
-hierarchy, as follows.
-
-Sampling
---------
-
-#. :class:`MCMC without gradients<MCMCSampler>`
-
-   - :class:`MetropolisRandomWalkMCMC`, works on any :class:`LogPDF`.
-   - Metropolis-Hastings
-   - Adaptive methods
-
-     - :class:`AdaptiveCovarianceMC`, works on any :class:`LogPDF`.
-
-   - :class:`PopulationMCMC`, works on any :class:`LogPDF`.
-   - Differential evolution methods
-
-     - :class:`DifferentialEvolutionMCMC`, works on any :class:`LogPDF`.
-     - :class:`DreamMCMC`, works on any :class:`LogPDF`.
-     - :class:`EmceeHammerMCMC`, works on any :class:`LogPDF`.
-
-#. :class:`Nested sampling<NestedSampler>`
-
-   - :class:`NestedEllipsoidSampler`, requires a :class:`LogPDF` and a
-     :class:`LogPrior` that can be sampled from.
-   - :class:`NestedRejectionSampler`, requires a :class:`LogPDF` and a
-     :class:`LogPrior` that can be sampled from.
-
-#. Particle based samplers
-
-   - SMC
-
-#. :class:`ABC sampling<ABCSampler>`
-
-   - :class:`ABCSMC`, requires a :class:`LogPrior` that can be sampled from
-     from and an :class:`ErrorMeasure`.
-   - :class:`RejectionABC`, requires a :class:`LogPrior` that can be sampled
-     from and an :class:`ErrorMeasure`.
-
-#. 1st order sensitivity MCMC samplers (Need derivatives of :class:`LogPDF`)
-
-   - :class:`Metropolis-Adjusted Langevin Algorithm (MALA) <MALAMCMC>`, works
-     on any :class:`LogPDF` that provides 1st order sensitivities.
-   - :class:`Hamiltonian Monte Carlo<HamiltonianMCMC>`, works on any
-     :class:`LogPDF` that provides 1st order sensitivities.
-   - NUTS
-
-#. Differential geometric methods (Need Hessian of :class:`LogPDF`)
-
-   - smMALA
-   - RMHMC
-
-Optimisation
-------------
-
-All methods shown here are derivative-free methods that work on any
-:class:`ErrorMeasure` or :class:`LogPDF`.
-
-1. Particle-based methods
-
-   - Evolution strategies (global/local methods)
-
-     - :class:`CMAES`
-     - :class:`SNES`
-     - :class:`XNES`
-
-   - :class:`PSO` (global method)
 
 
+Defining inference problems in PINTS
+====================================
 
-Problems in Pints
-=================
+PINTS provides methods to sample distributions, implemented as a
+:class:`LogPDF`, and to optimise functions, implemented as an
+:class:`ErrorMeasure` or a :class:`LogPDF`.
 
-Pints defines :class:`single<SingleOutputProblem>` and
+Users can define LogPDF or ErrorMeasure implementations directly, or they can
+use PINTS' :class:`ForwardModel` and problem classes to set up their problems,
+and then choose one of many predefined pdfs or errors.
+
+PINTS defines :class:`single<SingleOutputProblem>` and
 :class:`multi-output<MultiOutputProblem>` problem classes that wrap around
-models and data, and over which :class:`error measures<ErrorMeasure>` or
-:class:`log-likelihoods<LogLikelihood>` can be defined.
+a model and data, and over which :class:`error measures<ProblemErrorMeasure>`
+or :class:`log-likelihoods<ProblemLogLikelihood>` can be defined.
 
 To find the appropriate type of Problem to use, see the overview below:
 
@@ -140,3 +51,115 @@ To find the appropriate type of Problem to use, see the overview below:
 
    - Single data set: Use a :class:`MultiOutputProblem` and any of the
      appropriate error measures or log-likelihoods
+
+
+Provided methods
+================
+
+PINTS contains different types of methods, that can be roughly arranged into
+the classification shown below.
+
+Sampling
+--------
+
+#. :class:`MCMC without gradients<MCMCSampler>`, work on any :class:`LogPDF`.
+
+   - :class:`MetropolisRandomWalkMCMC`
+   - Adaptive methods
+
+     - :class:`AdaptiveCovarianceMC`
+     - :class:`DramACMC`
+     - :class:`HaarioACMC`
+     - :class:`HaarioBardenetACMC`
+     - :class:`RaoBlackwellACMC`
+
+   - :class:`PopulationMCMC`
+   - Differential evolution methods
+
+     - :class:`DifferentialEvolutionMCMC`
+     - :class:`DreamMCMC`
+     - :class:`EmceeHammerMCMC`
+
+   - Slice sampling
+
+     - :class:`SliceDoublingMCMC`
+     - :class:`SliceRankShrinkingMCMC`
+     - :class:`SliceStepoutMCMC`
+
+#. First order sensitivity MCMC samplers, require a :class:`LogPDF` that
+   provides first order sensitivities.
+
+   - :class:`Hamiltonian Monte Carlo<HamiltonianMCMC>`
+   - :class:`Metropolis-Adjusted Langevin Algorithm (MALA) <MALAMCMC>`
+   - :class:`Monomial Gamma HMC <MonomialGammaHamiltonianMCMC>`
+   - :class:`No U-Turn Sampler with dual averaging (NUTS) <NoUTurnMCMC>`
+   - :class:`RelativisticMCMC`
+
+#. :class:`Nested sampling<NestedSampler>`, require a :class:`LogPDF` and a
+   :class:`LogPrior` that can be sampled from.
+
+   - :class:`NestedEllipsoidSampler`
+   - :class:`NestedRejectionSampler`
+
+#. :class:`ABC sampling<ABCSampler>`, require a :class:`LogPrior` that can be
+   sampled from from and an :class:`ErrorMeasure`.
+
+   - :class:`ABCSMC`
+   - :class:`RejectionABC`
+
+
+Optimisation
+------------
+
+1. Particle, or population-based methods, work on any :class:`ErrorMeasure` or
+   :class:`LogPDF`.
+
+   - Evolution strategies
+
+     - :class:`CMAES`
+     - :class:`SNES`
+     - :class:`XNES`
+     - :class:`BareCMAES`
+
+   - :class:`PSO`
+
+2. General derivative-free methods
+
+   - :class:`NelderMead`
+
+3. Gradient-descent methods, require first order sensitivities
+
+   - :class:`GradientDescent`
+   - :class:`Adam`
+
+4. General derivative-using methods
+
+   - :class:`IRPropMin`
+
+
+Contents
+========
+
+.. toctree::
+    :maxdepth: 2
+
+    abc_samplers/index
+    boundaries
+    core_classes_and_methods
+    diagnostic_plots
+    error_measures
+    function_evaluation
+    io
+    log_likelihoods
+    log_pdfs
+    log_priors
+    mcmc_samplers/index
+    mcmc_diagnostics
+    nested_samplers/index
+    noise_generators
+    optimisers/index
+    noise_model_diagnostics
+    toy/index
+    toy/stochastic/index
+    transformations
+    utilities

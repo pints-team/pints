@@ -12,6 +12,7 @@ The easiest way to run an optimisation is by using the :func:`optimise` method
 or the :class:`OptimisationController` class.
 
 .. toctree::
+    :maxdepth: 1
 
     running
     base_classes

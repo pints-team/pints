@@ -9,6 +9,7 @@ examples.
 
 
 .. toctree::
+    :maxdepth: 1
 
     markov_jump_model
     stochastic_degradation_model

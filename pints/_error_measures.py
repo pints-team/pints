@@ -16,11 +16,15 @@ class ErrorMeasure(object):
     means a better fit.
 
     ErrorMeasures are callable objects: If ``e`` is an instance of an
-    :class:`ErrorMeasure` class you can calculate the error by calling ``e(p)``
-    where ``p`` is a point in parameter space. In PINTS, all parameters must be
+    :class:`ErrorMeasure` class you can calculate the error by calling ``e(x)``
+    where ``x`` is a point in parameter space. In PINTS, all parameters must be
     continuous and real.
+
+    All subclasses of ``ErrorMeasure`` should provide an implementation of
+    :meth:`__call__` and :meth:`n_parameters`.
     """
     def __call__(self, x):
+        """ Evaluates this error measure for parameters ``x``. """
         raise NotImplementedError
 
     def evaluateS1(self, x):

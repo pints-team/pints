@@ -31,21 +31,6 @@ Example::
     transform = pints.LogTransformation(n_parameters)
     mcmc = pints.MCMCController(log_posterior, n_chains, x0, transform=transform)
 
-Overview:
-
-- :class:`ComposedTransformation`
-- :class:`IdentityTransformation`
-- :class:`LogitTransformation`
-- :class:`LogTransformation`
-- :class:`RectangularBoundariesTransformation`
-- :class:`ScalingTransformation`
-- :class:`Transformation`
-- :class:`TransformedBoundaries`
-- :class:`TransformedErrorMeasure`
-- :class:`TransformedLogPDF`
-- :class:`TransformedLogPrior`
-- :class:`UnitCubeTransformation`
-
 
 Transformation types
 ********************

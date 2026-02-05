@@ -14,12 +14,17 @@ class LogPDF(object):
     probability density function (PDF).
 
     All :class:`LogPDF` types are callable: when called with a vector argument
-    ``p`` they return some value ``log(f(p))`` where ``f(p)`` is an
-    unnormalised PDF. The size of the argument ``p`` is given by
+    ``x`` they return some value ``log(f(x))`` where ``f(x)`` is an
+    unnormalised PDF. The size of the argument ``x`` is given by
     :meth:`n_parameters()`. In PINTS, all parameters must be continuous and
     real.
+
+    All subclasses of ``LogPDF`` should provide an implementation of
+    :meth:`__call__` and :meth:`n_parameters`. Providing :meth:`evaluateS1` is
+    optional.
     """
     def __call__(self, x):
+        """ Evaluates this LogPDF for parameters ``x``. """
         raise NotImplementedError
 
     def evaluateS1(self, x):

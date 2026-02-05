@@ -39,6 +39,7 @@ extensions = [
 autodoc_default_options = {
     'members': None,
     'inherited-members': None,
+    'special-members': '__call__',
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -55,7 +56,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Pints'
-copyright = u'2022, Pints Authors'
+copyright = u'2017-2026, Pints Authors'
 author = u'Pints Authors'
 
 # The version info for the project you're documenting, acts as replacement for
