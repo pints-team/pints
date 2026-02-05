@@ -521,31 +521,17 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_max_unchanged_function_iterations(None)
         self.assertRaises(ValueError, opt.run)
 
-    def test_set_population_size(self):
-        # Tests the set_population_size method for this optimiser.
+    def test_population_size_not_set(self):
+        # Population size can be None: then suggested should be used
 
-        r = pints.toy.RosenbrockError()
-        x = np.array([1.01, 1.01])
-        opt = pints.OptimisationController(r, x, method=method)
-        m = opt.optimiser()
-        n = m.population_size()
-        m.set_population_size(n + 1)
-        self.assertEqual(m.population_size(), n + 1)
-
-        # Test invalid size
-        self.assertRaisesRegex(
-            ValueError, 'at least 1', m.set_population_size, 0)
-
-        # test hyper parameter interface
-        self.assertEqual(m.n_hyper_parameters(), 1)
-        m.set_hyper_parameters([n + 2])
-        self.assertEqual(m.population_size(), n + 2)
-        self.assertRaisesRegex(
-            ValueError, 'at least 1', m.set_hyper_parameters, [0])
-
-        # Test changing during run
-        m.ask()
-        self.assertRaises(Exception, m.set_population_size, 2)
+        model = pints.toy.ParabolicError()
+        opt = pints.OptimisationController(model, [1, 1], method=pints.CMAES)
+        opt.optimiser().set_population_size(None)
+        opt.set_log_to_screen(True)
+        opt.set_max_iterations(3)
+        with StreamCapture() as c:
+            opt.run()
+        self.assertIn('Population size: 6', c.text())
 
     def test_parallel(self):
         # Test parallelised running.
