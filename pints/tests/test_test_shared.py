@@ -94,7 +94,7 @@ class TestSharedTestModule(unittest.TestCase):
         self.assertTrue(c.check([-1 + 1e-12, 0]))
         self.assertTrue(c.check([0, 1 - 1e-12]))
         self.assertTrue(c.check([0, -1 + 1e-12]))
-        x, y = np.cos(0.123), np.sin(0.123)
+        x, y = np.cos(0.123), np.sin(0.123) - 1e9
         self.assertFalse(c.check([x, y]))
         xs = c.sample(100)
         self.assertEqual(xs.shape, (100, 2))
