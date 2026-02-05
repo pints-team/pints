@@ -10,6 +10,7 @@ interface, that can be used to sample from an unknown
 :class:`Posterior<pints.LogPosterior>`).
 
 .. toctree::
+    :maxdepth: 1
 
     running
     base_classes

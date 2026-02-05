@@ -12,6 +12,7 @@ Some toy classes provide extra functionality defined in the
 
 
 .. toctree::
+    :maxdepth: 1
 
     toy_classes
     annulus_logpdf

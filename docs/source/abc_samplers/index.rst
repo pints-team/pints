@@ -11,6 +11,7 @@ given a :class:`LogPrior` and a :class:`ErrorMeasure`.
 
 
 .. toctree::
+    :maxdepth: 1
 
     base_classes
     abc_smc

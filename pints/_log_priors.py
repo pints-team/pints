@@ -386,15 +386,14 @@ class GammaLogPrior(pints.LogPrior):
             self._a)
 
     def __call__(self, x):
-        if x[0] < 0.0:
+        if x[0] < 0:
             return -np.inf
-        else:
-            return self._constant + scipy.special.xlogy(self._a - 1.,
-                                                        x[0]) - self._b * x[0]
+        return self._constant + scipy.special.xlogy(
+            self._a - 1, x[0]) - self._b * x[0]
 
     def cdf(self, x):
         """ See :meth:`LogPrior.cdf()`. """
-        return scipy.stats.gamma.cdf(x, a=self._a, loc=0, scale=1.0 / self._b)
+        return scipy.stats.gamma.cdf(x, a=self._a, loc=0, scale=1 / self._b)
 
     def evaluateS1(self, x):
         """ See :meth:`LogPDF.evaluateS1()`. """
@@ -403,18 +402,18 @@ class GammaLogPrior(pints.LogPrior):
         _x = x[0]
 
         # Account for pathological edge
-        if _x == 0.0:
-            _x = np.nextafter(0.0, 1.0)
+        if _x == 0:
+            _x = np.nextafter(0, 1)
 
-        if _x < 0.0:
-            return value, np.asarray([0.])
+        if _x < 0:
+            return value, np.asarray([0])
         else:
             # Use np.divide here to better handle possible v small denominators
-            return value, np.asarray([np.divide(self._a - 1., _x) - self._b])
+            return value, np.asarray([np.divide(self._a - 1, _x) - self._b])
 
     def icdf(self, p):
         """ See :meth:`LogPrior.icdf()`. """
-        return scipy.stats.gamma.ppf(p, a=self._a, loc=0, scale=1.0 / self._b)
+        return scipy.stats.gamma.ppf(p, a=self._a, loc=0, scale=1 / self._b)
 
     def mean(self):
         """ See :meth:`LogPrior.mean()`. """

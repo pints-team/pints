@@ -14,24 +14,6 @@ Example::
     x = [1, 2, 3]
     fx = logpdf(x)
 
-Overview:
-
-- :class:`AR1LogLikelihood`
-- :class:`ARMA11LogLikelihood`
-- :class:`CauchyLogLikelihood`
-- :class:`CensoredGaussianLogLikelihood`
-- :class:`ConstantAndMultiplicativeGaussianLogLikelihood`
-- :class:`GaussianIntegratedLogUniformLogLikelihood`
-- :class:`GaussianIntegratedUniformLogLikelihood`
-- :class:`GaussianKnownSigmaLogLikelihood`
-- :class:`GaussianLogLikelihood`
-- :class:`KnownNoiseLogLikelihood`
-- :class:`LogNormalLogLikelihood`
-- :class:`MultiplicativeGaussianLogLikelihood`
-- :class:`ScaledLogLikelihood`
-- :class:`StudentTLogLikelihood`
-- :class:`UnknownNoiseLogLikelihood`
-
 
 .. autoclass:: AR1LogLikelihood
 
