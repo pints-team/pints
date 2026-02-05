@@ -169,8 +169,8 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
 
     def f_guessed(self):
         """
-        For optimisers in which the best guess of the optimum
-        (see :meth:`x_guessed`) differs from the best-seen point (see
+        For optimisers in which the best guess of the optimum (see
+        :meth:`x_guessed`) differs from the best-seen point (see
         :meth:`x_best`), this method returns an estimate of the objective
         function value at ``x_guessed``.
 
@@ -236,7 +236,7 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
     def x_best(self):
         """
         Returns the best position seen during an optimisation, i.e. the point
-        for which the minimal error or maximum likelihood was observed.
+        for which the minimal error or maximum LogPDF was observed.
         """
         raise NotImplementedError
 
@@ -245,7 +245,7 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         Returns the optimiser's current best estimate of where the optimum is.
 
         For many optimisers, this will simply be the point for which the
-        minimal error or maximum likelihood was observed, so that
+        minimal error or maximum LogPDF was observed, so that
         ``x_guessed = x_best``. However, optimisers like :class:`pints.CMAES`
         and its derivatives, maintain a separate "best guess" value that does
         not necessarily correspond to any of the points evaluated during the
