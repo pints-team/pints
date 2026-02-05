@@ -462,13 +462,13 @@ class OptimisationController(object):
         # Maximum iterations
         self._max_iterations = None
 
-        # Maximum number of iterations where f did not change significantly
-        self._unchanged_f_max_iterations = None  # max iter without change
-        self._unchanged_f_threshold = None       # smallest significant change
+        # Maximum number of iterations without significant change in f(x)
+        self._ftol_max = None        # max number of iterations without change
+        self._ftol_threshold = None  # smallest significant change
 
-        # Maximum number of iterations where x did not change significantly
-        self._unchanged_x_max_iterations = None  # max iter without change
-        self._unchanged_x_threshold = None       # smallest sig change, p param
+        # Maximum number of iterations without significant change in x
+        self._xtol_max = None        # max number of iterations without change
+        self._xtol_threshold = None  # smallest significant change per param
 
         # Maximum evaluations
         self._max_evaluations = None
@@ -478,7 +478,7 @@ class OptimisationController(object):
 
         # Default stopping critera
         self.set_max_iterations()
-        self.set_max_unchanged_function_iterations()
+        self.set_function_tolerance()
 
     def _check_stopping_criteria(self, iterations, unchanged_f_iterations,
                                  unchanged_x_iterations, evaluations, f_new):
@@ -509,23 +509,23 @@ class OptimisationController(object):
                 iterations >= self._max_iterations):
             return f'Maximum number of iterations reached ({iterations}).'
 
-        # Maximum number of iterations without significant change in f
-        if (self._unchanged_f_max_iterations is not None and
-                unchanged_f_iterations >= self._unchanged_f_max_iterations):
-            return ('No significant change in best function evaluation for'
-                    f' {unchanged_f_iterations} iterations.')
-
-        # Maximum number of iterations without significant change in x
-        if (self._unchanged_x_max_iterations is not None and
-                unchanged_x_iterations >= self._unchanged_x_max_iterations):
-            return ('No significant change in best parameters for'
-                    f' {unchanged_x_iterations} iterations.')
-
         # Maximum number of evaluations
         if (self._max_evaluations is not None and
                 evaluations >= self._max_evaluations):
             return ('Maximum number of evaluations reached'
                     f' ({self._max_evaluations}).')
+
+        # Maximum number of iterations without significant change in f
+        if (self._ftol_max is not None and
+                unchanged_f_iterations >= self._ftol_max):
+            return ('No significant change in best function evaluation for'
+                    f' {unchanged_f_iterations} iterations.')
+
+        # Maximum number of iterations without significant change in x
+        if (self._xtol_max is not None and
+                unchanged_x_iterations >= self._xtol_max):
+            return ('No significant change in best parameters for'
+                    f' {unchanged_x_iterations} iterations.')
 
         # Threshold function value
         if (self._function_threshold is not None and
@@ -553,13 +553,26 @@ class OptimisationController(object):
         """
         return self._use_f_guessed
 
+    def function_tolerance(self):
+        """
+        Returns a tuple ``(iterations, threshold)`` specifying the maximum
+        iterations without a significant change in best function evaluation,
+        if this stopping criterion is set, else ``(None, None)``.
+
+        The entries in the tuple correspond directly to the arguments to
+        :meth:`set_function_tolerance()`.
+        """
+        if self._ftol_max is None:
+            return (None, None)
+        return (self._ftol_max, self._ftol_threshold)
+
     def _has_stopping_criterion(self):
         """ Returns whether a stopping criterion has been set. """
         return any((
-            self._unchanged_f_max_iterations is not None,
-            self._unchanged_x_max_iterations is not None,
             self._max_iterations is not None,
             self._max_evaluations is not None,
+            self._ftol_max is not None,
+            self._xtol_max is not None,
             self._function_threshold is not None,
         ))
 
@@ -590,41 +603,15 @@ class OptimisationController(object):
 
     def max_unchanged_iterations(self):
         """
-        Deprecated alias of :meth:`max_unchanged_function_iterations()`.
+        Deprecated alias of :meth:`function_tolerance()`.
         """
-        # Deprecated on 2026-04-04
+        # Deprecated on 2026-02-05
         import warnings
         warnings.warn(
             'The method `max_unchanged_iterations` is deprecated.'
-            ' Please use `max_unchanged_function_iterations` instead.')
+            ' Please use `function_tolerance` instead.')
 
-        return self.max_unchanged_function_iterations()
-
-    def max_unchanged_function_iterations(self):
-        """
-        Returns a tuple ``(iterations, threshold)`` specifying the maximum
-        iterations without a significant change in best function evaluation,
-        if this stopping criterion is set, else ``(None, None)``.
-
-        The entries in the tuple correspond directly to the arguments to
-        :meth:`set_max_unchanged_function_iterations()`.
-        """
-        if self._unchanged_f_max_iterations is None:
-            return (None, None)
-        return (self._unchanged_f_max_iterations, self._unchanged_f_threshold)
-
-    def max_unchanged_parameter_iterations(self):
-        """
-        Returns a tuple ``(iterations, threshold)`` specifying the maximum
-        iterations without a significant change in best parameters, if this
-        stopping criterion is set, else ``(None, None)``.
-
-        The entries in the tuple correspond directly to the arguments to
-        :meth:`set_max_unchanged_parameter_iterations()`.
-        """
-        if self._unchanged_x_max_iterations is None:
-            return (None, None)
-        return (self._unchanged_x_max_iterations, self._unchanged_x_threshold)
+        return self.function_tolerance()
 
     def optimiser(self):
         """
@@ -639,6 +626,19 @@ class OptimisationController(object):
         run on, or ``False`` if parallelisation is disabled.
         """
         return self._n_workers if self._parallel else False
+
+    def parameter_tolerance(self):
+        """
+        Returns a tuple ``(iterations, threshold)`` specifying the maximum
+        iterations without a significant change in best parameters, if this
+        stopping criterion is set, else ``(None, None)``.
+
+        The entries in the tuple correspond directly to the arguments to
+        :meth:`set_parameter_tolerance()`.
+        """
+        if self._xtol_max is None:
+            return (None, None)
+        return (self._xtol_max, self._xtol_threshold)
 
     def run(self):
         """
@@ -774,8 +774,8 @@ class OptimisationController(object):
                 f_new = fg if self._use_f_guessed else fb
 
                 # Check for significant changes in f or in x
-                if self._unchanged_f_max_iterations:
-                    if np.abs(f_new - f_sig) >= self._unchanged_f_threshold:
+                if self._ftol_max:
+                    if np.abs(f_new - f_sig) >= self._ftol_threshold:
                         unchanged_f_iterations = 0
                         # Note: f_sig is only updated after a change, so that a
                         # slow drift that becomes significant over multiple
@@ -784,11 +784,10 @@ class OptimisationController(object):
                     else:
                         unchanged_f_iterations += 1
 
-                if self._unchanged_x_max_iterations:
+                if self._xtol_max:
                     x_new = (self._optimiser.x_guessed() if self._use_f_guessed
                              else self._optimiser.x_best())
-                    if np.any(np.abs(x_new - x_sig)
-                              >= self._unchanged_x_threshold):
+                    if np.any(np.abs(x_new - x_sig) >= self._xtol_threshold):
                         unchanged_x_iterations = 0
                         # Note: Only update here (see above)
                         x_sig = x_new
@@ -982,29 +981,28 @@ class OptimisationController(object):
 
     def set_max_unchanged_iterations(self, iterations=200, threshold=1e-11):
         """
-        Deprecated alias of :meth:`max_unchanged_function_iterations()`.
+        Deprecated alias of :meth:`function_tolerance()`.
         """
-        # Deprecated on 2026-04-04
+        # Deprecated on 2026-02-05
         import warnings
         warnings.warn(
             'The method `set_max_unchanged_iterations` is deprecated.'
-            ' Please use `set_max_unchanged_function_iterations` instead.')
+            ' Please use `set_function_tolerance` instead.')
 
-        self.set_max_unchanged_function_iterations(iterations, threshold)
+        self.set_function_tolerance(iterations, threshold)
 
-    def set_max_unchanged_function_iterations(
-            self, iterations=200, threshold=1e-11):
+    def set_function_tolerance(self, iterations=200, threshold=1e-11):
         """
         Adds a stopping criterion so that the routine halts if the objective
         function does not change by more than ``threshold`` for the given
         number of ``iterations``.
 
         This criterion is enabled by default. To disable it, use
-        ``set_max_unchanged_function_iterations(None)``.
+        ``set_function_tolerance(None)``.
 
         Note that this can be used to implement an absolute "ftol" stopping
         criteria, by calling
-        ``set_max_unchanged_function_iterations(1, ftol)``.
+        ``set_function_tolerance(1, ftol)``.
         """
         if iterations is not None:
             iterations = int(iterations)
@@ -1019,11 +1017,10 @@ class OptimisationController(object):
         else:
             threshold = None
 
-        self._unchanged_f_max_iterations = iterations
-        self._unchanged_f_threshold = threshold
+        self._ftol_max = iterations
+        self._ftol_threshold = threshold
 
-    def set_max_unchanged_parameter_iterations(
-            self, iterations=200, threshold=1e-11):
+    def set_parameter_tolerance(self, iterations=200, threshold=1e-11):
         """
         Adds a stopping criterion so that the routine halts if the position in
         parameter space does not change by more ``threshold`` for the given
@@ -1036,11 +1033,11 @@ class OptimisationController(object):
         criterion was met.
 
         This criterion is disabled by default. Once enabled, it can be disabled
-        again by calling ``set_max_unchanged_parameter_iterations(None)``.
+        again by calling ``set_parameter_tolerance(None)``.
 
         Note that this can be used to implement an absolute "xtol" stopping
         criteria, by calling
-        ``set_max_unchanged_parameter_iterations(1, xtol)``.
+        ``set_parameter_tolerance(1, xtol)``.
         """
         if iterations is not None:
             iterations = int(iterations)
@@ -1064,8 +1061,8 @@ class OptimisationController(object):
         else:
             threshold = None
 
-        self._unchanged_x_max_iterations = iterations
-        self._unchanged_x_threshold = threshold
+        self._xtol_max = iterations
+        self._xtol_threshold = threshold
 
     def set_parallel(self, parallel=False):
         """
@@ -1274,7 +1271,7 @@ def curve_fit(f, x, y, p0, boundaries=None, threshold=None, max_iter=None,
     # Set stopping criteria
     opt.set_threshold(threshold)
     opt.set_max_iterations(max_iter)
-    opt.set_max_unchanged_function_iterations(max_unchanged)
+    opt.set_function_tolerance(max_unchanged)
 
     # Set parallelisation
     opt.set_parallel(parallel)
@@ -1382,7 +1379,7 @@ def fmin(f, x0, args=None, boundaries=None, threshold=None, max_iter=None,
     # Set stopping criteria
     opt.set_threshold(threshold)
     opt.set_max_iterations(max_iter)
-    opt.set_max_unchanged_function_iterations(max_unchanged)
+    opt.set_function_tolerance(max_unchanged)
 
     # Set parallelisation
     opt.set_parallel(parallel)
