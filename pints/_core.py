@@ -327,6 +327,262 @@ class MultiOutputProblem(object):
         return self._values
 
 
+class ProblemCollection(object):
+    """
+    Represents an inference problem where a model is fit to a multi-valued time
+    series, such as when measured from a system with multiple outputs, where
+    the different time series are potentially measured at different time
+    intervals.
+
+    This class is also of use when different outputs are modelled with
+    different likelihoods or score functions.
+
+    Parameters
+    ----------
+    model
+        A model or model wrapper extending :class:`ForwardModel`.
+    args
+        Consecutive times, values lists for each output chunk. For example,
+        times_1, values_1, times_2, values_2: where times_1 = [1.2, 2.5, 3] and
+        values_1 = [2.3, 4.5, 4.5]; times_2 = [4, 5, 6, 7] and
+        values_2 = [[3.4, 1.1, 0.5, 0.6], [1.2, 3.3, 4.5, 5.5]].
+    """
+    def __init__(self, model, *args):
+        self._model = model
+        if len(args) < 2:
+            raise ValueError('Must supply at least one time series.')
+        if len(args) % 2 != 0:
+            raise ValueError(
+                'Must supply times and values for each time series.')
+        self._timeses = []
+        self._valueses = []
+        self._output_indices = []
+
+        k = 0
+        self._n_output_sets = len(args) // 2
+        for i in range(self._n_output_sets):
+            times = np.array(args[k])
+            times_shape = times.shape
+            if len(times_shape) != 1:
+                raise ValueError('Times must be one-dimensional.')
+            values = np.array(args[k + 1])
+            values_shape = values.shape
+            if values_shape[0] != times_shape[0]:
+                raise ValueError('Outputs must be of same length as times.')
+            self._timeses.append(times)
+            self._valueses.append(values)
+            if len(values_shape) > 1:
+                n_outputs = values_shape[1]
+            else:
+                n_outputs = 1
+            self._output_indices.extend([i] * n_outputs)
+            k += 2
+        self._times_all = np.sort(list(set(np.concatenate(self._timeses))))
+        self._output_indices = np.array(self._output_indices)
+
+        # vars to handle caching across multiple output chunks
+        self._cached_output = None
+        self._cached_sensitivities = None
+        self._cached_parameters = None
+
+    def _output_sorter(self, y, index):
+        """
+        Returns output(s) corresponding to a given index at times corresponding
+        to that output.
+        """
+        # lookup times in times array
+        times = self._timeses[index]
+        time_indices = [np.where(self._times_all == x)[0][0] for x in times]
+
+        # find relevant output indices
+        output_indices = np.where(self._output_indices == index)[0]
+
+        # pick rows then columns
+        if y.ndim == 1:
+            y = np.expand_dims(y, axis=1)
+        y_short = y[time_indices, :]
+        y_short = y_short[:, output_indices]
+        if y_short.shape[1] == 1:
+            y_short = y_short.reshape((len(self._timeses[index]),))
+        return y_short
+
+    def _output_and_sensitivity_sorter(self, y, dy, index):
+        """
+        Returns output(s) and sensitivities corresponding to a given index at
+        times corresponding to that output.
+        """
+        # lookup times in times array
+        times = self._timeses[index]
+        time_indices = [np.where(self._times_all == x)[0][0] for x in times]
+
+        # find relevant output indices
+        output_indices = np.where(self._output_indices == index)[0]
+
+        # pick rows then columns
+        if y.ndim == 1:
+            y = np.expand_dims(y, axis=1)
+        y_short = y[time_indices, :]
+        y_short = y_short[:, output_indices]
+        if y_short.shape[1] == 1:
+            y_short = y_short.reshape((len(self._timeses[index]),))
+
+        # sort sensitivities
+        # if only single problem output
+        if dy.ndim == 2:
+            dy_short = dy[time_indices, :]
+        # multi-output problem
+        else:
+            dy_short = dy[time_indices, :, :]
+            dy_short = dy_short[:, output_indices, :]
+            if len(output_indices) == 1:
+                dy_short = dy_short.reshape(
+                    len(time_indices), 1, dy_short.shape[2])
+        return y_short, dy_short
+
+    def _evaluate(self, parameters, index):
+        """ Evaluates model or returns cached result. """
+        parameters = pints.vector(parameters)
+        if not np.array_equal(self._cached_parameters, parameters):
+            y = np.asarray(self._model.simulate(parameters, self._times_all))
+            self._cached_output = y
+            self._cached_parameters = parameters
+        return self._output_sorter(self._cached_output, index)
+
+    def _evaluateS1(self, parameters, index):
+        """ Evaluates model with sensitivities or returns cached result. """
+        parameters = pints.vector(parameters)
+
+        # extra or here catches if evaluate has been called before evaluateS1
+        if (not np.array_equal(self._cached_parameters, parameters) or
+                self._cached_sensitivities is None):
+            y, dy = self._model.simulateS1(parameters, self._times_all)
+            self._cached_output = y
+            self._cached_sensitivities = dy
+            self._cached_parameters = parameters
+        return self._output_and_sensitivity_sorter(
+            self._cached_output, self._cached_sensitivities, index)
+
+    def model(self):
+        """ Returns forward model. """
+        return self._model
+
+    def subproblem(self, index):
+        """
+        Creates a `pints.SubProblem` corresponding to a particular output
+        index.
+        """
+        if index >= self._n_output_sets:
+            raise ValueError('Index must be less than number of output sets.')
+        return pints.SubProblem(self, index)
+
+    def timeses(self):
+        """ Returns list of times sequences: one for each output chunk. """
+        return self._timeses
+
+    def valueses(self):
+        """ Returns list of value chunks: one for each output chunk. """
+        return self._valueses
+
+
+class SubProblem(object):
+    """
+    Represents an inference problem for a subset of outputs from a multi-output
+    model. This is likely to be used either when the measurement times across
+    outputs are differ or when different outputs require different objective
+    functions (i.e. log-likelihoods or score functions).
+
+    Parameters
+    ----------
+    collection
+        An object of :class:`ProblemCollection`.
+    index
+        An integer index corresponding to the particular output chunk in the
+        collection.
+    """
+    def __init__(self, collection, index):
+
+        # Get items from collection
+        self._collection = collection
+        self._index = index
+        model = collection.model()
+        self._model = model
+        timeses = collection.timeses()
+        self._times = pints.vector(timeses[index])
+        values = collection.valueses()
+        values = values[index]
+
+        self._n_parameters = int(model.n_parameters())
+        self._n_times = len(self._times)
+
+        values = np.array(values)
+        values_shape = values.shape
+
+        # here don't check array sizes as this will be done in the
+        # problemcollection.subproblem method
+        if len(values_shape) == 1:
+            self._n_outputs = 1
+
+            # copy so that they can no longer be changed
+            self._values = pints.vector(values)
+
+        else:
+            self._n_outputs = values_shape[1]
+            self._values = pints.matrix2d(values)
+
+    def evaluate(self, parameters):
+        """
+        Runs a simulation using the given parameters, returning the simulated
+        values.
+        """
+        return self._collection._evaluate(parameters, self._index)
+
+    def evaluateS1(self, parameters):
+        """
+        Runs a simulation using the given parameters, returning the simulated
+        values.
+        """
+        return self._collection._evaluateS1(parameters, self._index)
+
+    def n_outputs(self):
+        """
+        Returns the number of outputs for this problem.
+        """
+        return self._n_outputs
+
+    def n_parameters(self):
+        """
+        Returns the dimension (the number of parameters) of this problem.
+        """
+        return self._n_parameters
+
+    def n_times(self):
+        """
+        Returns the number of sampling points, i.e. the length of the vectors
+        returned by :meth:`times()` and :meth:`values()`.
+        """
+        return self._n_times
+
+    def times(self):
+        """
+        Returns this problem's times.
+
+        The returned value is a read-only NumPy array of shape
+        ``(n_times, n_outputs)``, where ``n_times`` is the number of time
+        points and ``n_outputs`` is the number of outputs.
+        """
+        return self._times
+
+    def values(self):
+        """
+        Returns this problem's values.
+
+        The returned value is a read-only NumPy array of shape
+        ``(n_times, n_outputs)``, where ``n_times`` is the number of time
+        points and ``n_outputs`` is the number of outputs.
+        """
+        return self._values
+
+
 class TunableMethod(object):
 
     """
