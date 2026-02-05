@@ -138,7 +138,12 @@ class TestDiagnostics(unittest.TestCase):
         # Pass only a single chain
         chains = np.empty(shape=(1, 5))
         self.assertRaisesRegex(
-            ValueError, 'only accepts 2 or 3 dimensional', pints.rhat, chains)
+            ValueError, '2 or higher', pints.rhat, chains)
+
+        # Pass only a single sample
+        chains = np.empty(shape=(5, 1))
+        self.assertRaisesRegex(
+            ValueError, 'at least 2 samples', pints.rhat, chains)
 
         # Pass bad warm-up arguments
         chains = np.empty(shape=(2, 4))
