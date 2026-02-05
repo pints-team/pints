@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- [#1716](https://github.com/pints-team/pints/pull/1716) PINTS is now tested on Python 3.14.
 - [#1715](https://github.com/pints-team/pints/pull/1715) Added methods `ProblemErrorMeasure.problem()`, `ProblemLogLikelihood.problem()`, `SingleOutputProblem.model()` and `MultiOutputProblem.model()`.
 - [#1508](https://github.com/pints-team/pints/pull/1508) Added a method `OptimisationController.set_max_unchanged_parameter_iterations` that allows methods to stop after a fixed number of iterations with no significant movement in parameter space.
 ### Changed

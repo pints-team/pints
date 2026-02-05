@@ -133,7 +133,7 @@ def _between(chains):
 def rhat(chains, warm_up=0.0):
     r"""
     Returns the convergence measure :math:`\hat{R}` for the approximate
-    posterior according to [1]_.
+    posterior according to [3]_.
 
     :math:`\hat{R}` diagnoses convergence by checking mixing and stationarity
     of :math:`m` chains (at least two, :math:`m\geq 2`). To diminish the
@@ -180,8 +180,8 @@ def rhat(chains, warm_up=0.0):
 
     References
     ----------
-    ..  [1] "Bayesian data analysis", ch. 11.4 'Inference and assessing
-        convergence', 3rd edition, Gelman et al., 2014.
+    .. [3] "Bayesian data analysis", ch. 11.4 'Inference and assessing
+           convergence', 3rd edition, Gelman et al., 2014.
 
     Parameters
     ----------

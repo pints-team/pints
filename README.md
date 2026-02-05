@@ -37,7 +37,7 @@ The full code can be [viewed here](https://github.com/pints-team/pints/blob/main
 
 Beyond time-series models, PINTS can be used on any error function or log-likelihood that takes real-valued, continuous parameters.
 
-A graphical overview of the methods included in PINTS can be [viewed here](https://pints-team.github.io/pints-methods-overview/).
+An overview of the methods provided by PINTS can be [viewed here](https://pints.readthedocs.io/en/latest/#provided-methods).
 
 ### Examples and documentation
 

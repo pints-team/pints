@@ -9,19 +9,6 @@ Pints provides the :class:`SingleOutputProblem` and
 inverse problems based on time series data and
 :class:`ForwardModel`.
 
-Overview:
-
-- :class:`ForwardModel`
-- :class:`ForwardModelS1`
-- :class:`MultiOutputProblem`
-- :class:`SingleOutputProblem`
-- :class:`TunableMethod`
-- :func:`version`
-
-.. autofunction:: version
-
-.. autoclass:: TunableMethod
-
 
 Forward model
 *************
@@ -40,3 +27,12 @@ Problems
 
 .. autoclass:: MultiOutputProblem
 
+Hyperparameters
+***************
+
+.. autoclass:: TunableMethod
+
+PINTS version
+*************
+
+.. autofunction:: version

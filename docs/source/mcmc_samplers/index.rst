@@ -10,6 +10,7 @@ interface, that can be used to sample from an unknown
 :class:`Posterior<pints.LogPosterior>`).
 
 .. toctree::
+    :maxdepth: 1
 
     running
     base_classes
@@ -32,4 +33,4 @@ interface, that can be used to sample from an unknown
     slice_doubling_mcmc
     slice_rank_shrinking_mcmc
     slice_stepout_mcmc
-    summary_mcmc
+
