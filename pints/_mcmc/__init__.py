@@ -18,6 +18,7 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
     :class:`pints.TunableMethod` interfaces.
     """
 
+    @classmethod
     def name(self):
         """
         Returns this method's full name.
@@ -1128,8 +1129,7 @@ class MCMCSampling(MCMCController):
         warnings.warn(
             'The class `pints.MCMCSampling` is deprecated.'
             ' Please use `pints.MCMCController` instead.')
-        super(MCMCSampling, self).__init__(log_pdf, chains, x0, sigma0,
-                                           transformation, method=method)
+        super().__init__(log_pdf, chains, x0, sigma0, transformation, method)
 
 
 def mcmc_sample(log_pdf, chains, x0, sigma0=None, transformation=None,

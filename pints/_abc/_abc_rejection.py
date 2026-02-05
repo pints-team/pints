@@ -46,6 +46,7 @@ class RejectionABC(pints.ABCSampler):
         self._xs = None
         self._ready_for_tell = False
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.ABCSampler.name()`. """
         return 'Rejection ABC'

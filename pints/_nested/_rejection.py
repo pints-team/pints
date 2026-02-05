@@ -72,7 +72,7 @@ class NestedRejectionSampler(pints.NestedSampler):
            https://doi.org/10.1214/06-BA127
     """
     def __init__(self, log_prior):
-        super(NestedRejectionSampler, self).__init__(log_prior)
+        super().__init__(log_prior)
 
         self._needs_sensitivities = False
 
@@ -102,6 +102,7 @@ class NestedRejectionSampler(pints.NestedSampler):
         """
         self.set_n_active_points(x[0])
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.NestedSampler.name()`. """
         return 'Nested rejection sampler'

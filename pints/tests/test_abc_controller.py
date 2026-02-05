@@ -6,13 +6,16 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import os
+import tempfile
+
 import pints
 import pints.toy
 import pints.toy.stochastic
 import unittest
 import numpy as np
 
-from shared import StreamCapture, TemporaryDirectory
+from shared import StreamCapture
 
 
 LOG_SCREEN_1 = [
@@ -211,8 +214,8 @@ class TestABCController(unittest.TestCase):
 
         # With output to file
         np.random.seed(1)
-        with TemporaryDirectory() as d:
-            filename = d.path('test.txt')
+        with tempfile.TemporaryDirectory() as d:
+            filename = os.path.join(d, 'test.txt')
             abc = pints.ABCController(
                 self.error_measure,
                 self.log_prior,
@@ -241,8 +244,8 @@ class TestABCController(unittest.TestCase):
 
         # With output to CSV file
         np.random.seed(1)
-        with TemporaryDirectory() as d:
-            filename = d.path('test.txt')
+        with tempfile.TemporaryDirectory() as d:
+            filename = os.path.join(d, 'test.txt')
             abc = pints.ABCController(
                 self.error_measure, self.log_prior, method=pints.RejectionABC)
             abc.set_max_iterations(6)

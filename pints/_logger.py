@@ -33,7 +33,7 @@ class Logger(object):
 
     """
     def __init__(self):
-        super(Logger, self).__init__()
+        super().__init__()
 
         # Log to screen
         self._stream = sys.stdout

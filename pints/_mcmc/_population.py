@@ -49,7 +49,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
            https://doi.org/10.1007/s11222-007-9028-9
     """
     def __init__(self, x0, sigma0=None):
-        super(PopulationMCMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
 
         # Set initial state
         self._running = False
@@ -153,6 +153,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         logger.log(self._j)
         logger.log('yes' if self._have_exchanged else 'no')
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Population MCMC'

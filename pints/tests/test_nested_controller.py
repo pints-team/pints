@@ -6,14 +6,17 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import os
 import re
+import tempfile
 import unittest
+
 import numpy as np
 
 import pints
 import pints.toy
 
-from shared import StreamCapture, TemporaryDirectory
+from shared import StreamCapture
 
 
 class TestNestedController(unittest.TestCase):
@@ -169,8 +172,8 @@ class TestNestedController(unittest.TestCase):
 
         # Log to file
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                filename = d.path('test.txt')
+            with tempfile.TemporaryDirectory() as d:
+                filename = os.path.join(d, 'test.txt')
                 sampler = pints.NestedController(
                     self.log_likelihood, self.log_prior)
                 sampler.set_n_posterior_samples(2)

@@ -129,7 +129,7 @@ class NelderMead(pints.Optimiser):
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):
-        super(NelderMead, self).__init__(x0, sigma0, boundaries)
+        super().__init__(x0, sigma0, boundaries)
 
         if self._boundaries is not None:
             warnings.warn(
@@ -218,6 +218,7 @@ class NelderMead(pints.Optimiser):
         """ See: :meth:`pints.Optimiser.f_best()`. """
         return self._fs[0] if self._running else np.inf
 
+    @classmethod
     def name(self):
         """ See: :meth:`pints.Optimiser.name()`. """
         return 'Nelder-Mead'

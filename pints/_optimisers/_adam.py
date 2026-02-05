@@ -119,6 +119,7 @@ class Adam(pints.Optimiser):
         logger.log(self._b1t)
         logger.log(self._b2t)
 
+    @classmethod
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'Adam'

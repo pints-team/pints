@@ -7,7 +7,6 @@
 #
 import io
 import os
-import shutil
 import sys
 import tempfile
 
@@ -24,7 +23,7 @@ class StreamCapture(object):
     Warning: This class is not thread-safe.
     """
     def __init__(self, stdout=True, stderr=False):
-        super(StreamCapture, self).__init__()
+        super().__init__()
 
         # True if currently capturing
         self._capturing = False
@@ -146,7 +145,7 @@ class SubCapture(object):
     Warning: This class is not thread-safe.
     """
     def __init__(self, dump_on_error=False):
-        super(SubCapture, self).__init__()
+        super().__init__()
         self._capturing = False
         self._captured = []
         self._dump_on_error = bool(dump_on_error)
@@ -287,60 +286,6 @@ class SubCapture(object):
         return ''.join(self._captured)
 
 
-class TemporaryDirectory(object):
-    """
-    ContextManager that provides a temporary directory to create temporary
-    files in. Deletes the directory and its contents when the context is
-    exited.
-    """
-    def __init__(self):
-        super(TemporaryDirectory, self).__init__()
-        self._dir = None
-
-    def __enter__(self):
-        self._dir = os.path.realpath(tempfile.mkdtemp())
-        return self
-
-    def path(self, path):
-        """
-        Returns an absolute path to a file or directory name inside this
-        temporary directory, that can be used to write to.
-
-        Example::
-
-            with TemporaryDirectory() as d:
-                filename = d.path('test.txt')
-                with open(filename, 'w') as f:
-                    f.write('Hello')
-                with open(filename, 'r') as f:
-                    print(f.read())
-        """
-        if self._dir is None:
-            raise RuntimeError(
-                'TemporaryDirectory.path() can only be called from inside the'
-                ' context.')
-
-        path = os.path.realpath(os.path.join(self._dir, path))
-        if path[0:len(self._dir)] != self._dir:
-            raise ValueError(
-                'Relative path specified to location outside of temporary'
-                ' directory.')
-
-        return path
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        try:
-            shutil.rmtree(self._dir)
-        finally:
-            self._dir = None
-
-    def __str__(self):
-        if self._dir is None:
-            return '<TemporaryDirectory, outside of context>'
-        else:
-            return self._dir
-
-
 class CircularBoundaries(pints.Boundaries):
     """
     Circular boundaries, to test boundaries that are non-rectangular.
@@ -353,7 +298,7 @@ class CircularBoundaries(pints.Boundaries):
         The radius (in all directions).
     """
     def __init__(self, center, radius=1):
-        super(CircularBoundaries, self).__init__()
+        super().__init__()
 
         # Check arguments
         center = pints.vector(center)

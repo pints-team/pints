@@ -55,7 +55,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
            Galin Jones, and Xiao-Li Meng.
     """
     def __init__(self, x0, sigma0=None):
-        super(HamiltonianMCMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
 
         # Set initial state
         self._running = False
@@ -185,6 +185,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 2
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Hamiltonian Monte Carlo'

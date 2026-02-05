@@ -33,8 +33,7 @@ class SchloglModel(MarkovJumpModel):
     def __init__(self, initial_molecule_count=20):
         V = [[1], [-1], [1], [-1]]
         init_list = [initial_molecule_count]
-        super(SchloglModel, self).__init__(init_list,
-                                           V, self._propensities)
+        super().__init__(init_list, V, self._propensities)
 
     @staticmethod
     def _propensities(xs, ks):

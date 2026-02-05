@@ -66,7 +66,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
             2017, Proceedings of Machine Learning Research.
     """
     def __init__(self, x0, sigma0=None):
-        super(RelativisticMCMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
 
         # Set initial state
         self._running = False
@@ -320,6 +320,7 @@ class RelativisticMCMC(pints.SingleChainMCMC):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 4
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Relativistic MCMC'

@@ -65,7 +65,7 @@ class DreamMCMC(pints.MultiChainMCMC):
     """
 
     def __init__(self, chains, x0, sigma0=None):
-        super(DreamMCMC, self).__init__(chains, x0, sigma0)
+        super().__init__(chains, x0, sigma0)
 
         # Need at least 3 chains
         if self._n_chains < 3:
@@ -214,6 +214,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         # logger.log(self._acceptance)
         # TODO
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'DiffeRential Evolution Adaptive Metropolis (DREAM) MCMC'

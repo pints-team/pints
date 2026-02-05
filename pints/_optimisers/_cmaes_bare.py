@@ -42,7 +42,7 @@ class BareCMAES(pints.PopulationBasedOptimiser):
     """
 
     def __init__(self, x0, sigma0=0.1, boundaries=None):
-        super(BareCMAES, self).__init__(x0, sigma0, boundaries)
+        super().__init__(x0, sigma0, boundaries)
 
         # Set initial state
         self._running = False
@@ -223,6 +223,7 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         # Update optimiser state
         self._running = True
 
+    @classmethod
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'Bare-bones CMA-ES'

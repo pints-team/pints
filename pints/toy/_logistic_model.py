@@ -42,7 +42,7 @@ class LogisticModel(pints.ForwardModelS1, ToyModel):
     """
 
     def __init__(self, initial_population_size=2):
-        super(LogisticModel, self).__init__()
+        super().__init__()
         self._p0 = float(initial_population_size)
         if self._p0 < 0:
             raise ValueError('Population size cannot be negative.')

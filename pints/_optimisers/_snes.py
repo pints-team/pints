@@ -36,7 +36,7 @@ class SNES(pints.PopulationBasedOptimiser):
            http://pybrain.org
     """
     def __init__(self, x0, sigma0=None, boundaries=None):
-        super(SNES, self).__init__(x0, sigma0, boundaries)
+        super().__init__(x0, sigma0, boundaries)
 
         # Set initial state
         self._running = False
@@ -120,6 +120,7 @@ class SNES(pints.PopulationBasedOptimiser):
         # Update optimiser state
         self._running = True
 
+    @classmethod
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'Seperable Natural Evolution Strategy (SNES)'

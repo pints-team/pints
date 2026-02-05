@@ -16,10 +16,9 @@ class ABCSampler(pints.Loggable, pints.TunableMethod):
     :class:`pints.TunableMethod` interfaces.
     """
 
+    @classmethod
     def name(self):
-        """
-        Returns this method's full name.
-        """
+        """ Returns this method's full name. """
         raise NotImplementedError
 
     def ask(self):

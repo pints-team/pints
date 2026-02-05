@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 #
-# Tests the Pints io methods.
+# Tests the PINTS io methods.
 #
 # This file is part of PINTS (https://github.com/pints-team/pints/) which is
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
 import os
+import tempfile
+
 import pints
 import pints.io
 import numpy as np
 import unittest
-
-from shared import TemporaryDirectory
 
 
 class TestIO(unittest.TestCase):
@@ -34,9 +34,9 @@ class TestIO(unittest.TestCase):
             chain2.append(list(row))
 
         # Check saving and loading
-        with TemporaryDirectory() as d:
+        with tempfile.TemporaryDirectory() as d:
             # Single chain
-            filename = d.path('test.csv')
+            filename = os.path.join(d, 'test.csv')
             pints.io.save_samples(filename, chain0)
             self.assertTrue(os.path.isfile(filename))
             test0 = pints.io.load_samples(filename)
@@ -45,11 +45,11 @@ class TestIO(unittest.TestCase):
             self.assertFalse(chain0 is test0)
 
             # Multiple chains
-            filename = d.path('multi.csv')
+            filename = os.path.join(d, 'multi.csv')
             pints.io.save_samples(filename, chain0, chain1, chain2)
-            self.assertTrue(os.path.isfile(d.path('multi_0.csv')))
-            self.assertTrue(os.path.isfile(d.path('multi_1.csv')))
-            self.assertTrue(os.path.isfile(d.path('multi_2.csv')))
+            self.assertTrue(os.path.isfile(os.path.join(d, 'multi_0.csv')))
+            self.assertTrue(os.path.isfile(os.path.join(d, 'multi_1.csv')))
+            self.assertTrue(os.path.isfile(os.path.join(d, 'multi_2.csv')))
             test0, test1, test2 = pints.io.load_samples(filename, 3)
             self.assertEqual(chain0.shape, test0.shape)
             self.assertTrue(np.all(chain0 == test0))
@@ -78,7 +78,7 @@ class TestIO(unittest.TestCase):
             self.assertRaisesRegex(
                 ValueError, 'integer greater than zero',
                 pints.io.load_samples, filename, 0)
-            filename = d.path('x.csv')
+            filename = os.path.join(d, 'x.csv')
             self.assertRaises(
                 FileNotFoundError, pints.io.load_samples, filename)
             self.assertRaises(

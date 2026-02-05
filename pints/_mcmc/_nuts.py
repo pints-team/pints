@@ -513,7 +513,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
     """
 
     def __init__(self, x0, sigma0=None):
-        super(NoUTurnMCMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
 
         # hyperparameters
         self._adaptor = [
@@ -659,6 +659,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 1
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'No-U-Turn MCMC'

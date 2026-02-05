@@ -186,10 +186,9 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         """
         return self.f_best()
 
+    @classmethod
     def name(self):
-        """
-        Returns this method's full name.
-        """
+        """ Returns this method's full name. """
         raise NotImplementedError
 
     def needs_sensitivities(self):
@@ -264,7 +263,7 @@ class PopulationBasedOptimiser(Optimiser):
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):
-        super(PopulationBasedOptimiser, self).__init__(x0, sigma0, boundaries)
+        super().__init__(x0, sigma0, boundaries)
 
         # Set initial population size using heuristic
         self._population_size = self._suggested_population_size()
@@ -1126,7 +1125,7 @@ class Optimisation(OptimisationController):
         warnings.warn(
             'The class `pints.Optimisation` is deprecated.'
             ' Please use `pints.OptimisationController` instead.')
-        super(Optimisation, self).__init__(
+        super().__init__(
             function, x0, sigma0, boundaries, transformation, method=method)
 
 

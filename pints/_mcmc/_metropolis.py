@@ -36,7 +36,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
     """
 
     def __init__(self, x0, sigma0=None):
-        super(MetropolisRandomWalkMCMC, self).__init__(x0, sigma0)
+        super().__init__(x0, sigma0)
 
         # Set initial state
         self._running = False
@@ -100,6 +100,7 @@ class MetropolisRandomWalkMCMC(pints.SingleChainMCMC):
         """ See :meth:`Loggable._log_write()`. """
         logger.log(self._acceptance)
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Metropolis random walk MCMC'

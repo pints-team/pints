@@ -51,7 +51,7 @@ class ConstantModel(pints.ForwardModelS1):
     """
 
     def __init__(self, n, force_multi_output=False):
-        super(ConstantModel, self).__init__()
+        super().__init__()
 
         n = int(n)
         if n < 1:

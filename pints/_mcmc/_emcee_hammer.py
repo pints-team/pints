@@ -44,7 +44,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
     """
 
     def __init__(self, chains, x0, sigma0=None):
-        super(EmceeHammerMCMC, self).__init__(chains, x0, sigma0)
+        super().__init__(chains, x0, sigma0)
 
         # Need at least 3 chains
         if self._n_chains < 3:
@@ -136,6 +136,7 @@ class EmceeHammerMCMC(pints.MultiChainMCMC):
         # Update sampler state
         self._running = True
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Emcee Hammer MCMC'

@@ -72,7 +72,7 @@ class PSO(pints.PopulationBasedOptimiser):
     """
 
     def __init__(self, x0, sigma0=None, boundaries=None):
-        super(PSO, self).__init__(x0, sigma0, boundaries)
+        super().__init__(x0, sigma0, boundaries)
 
         # Set initial state
         self._running = False
@@ -172,6 +172,7 @@ class PSO(pints.PopulationBasedOptimiser):
         for f in self._fl:
             logger.log(f)
 
+    @classmethod
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'Particle Swarm Optimisation (PSO)'

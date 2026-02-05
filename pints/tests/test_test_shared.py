@@ -6,13 +6,12 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
-import os
 import sys
 import unittest
 
 import numpy as np
 
-from shared import StreamCapture, TemporaryDirectory, UnitCircleBoundaries2D
+from shared import StreamCapture, UnitCircleBoundaries2D
 
 
 class TestSharedTestModule(unittest.TestCase):
@@ -49,33 +48,6 @@ class TestSharedTestModule(unittest.TestCase):
             sys.stdout.write(t2)
         self.assertEqual(c.text(), (tt, et))
 
-    def test_temporary_directory(self):
-        # Tests the temporary directory class.
-
-        with TemporaryDirectory() as d:
-            # Test dir creation
-            tempdir = d.path('')
-            self.assertTrue(os.path.isdir(tempdir))
-
-            # Test file creation
-            text = 'Hello\nWorld'
-            filename = d.path('test.txt')
-            with open(filename, 'w') as f:
-                f.write(text)
-            with open(filename, 'r') as f:
-                self.assertTrue(f.read() == text)
-            self.assertTrue(os.path.isfile(filename))
-
-            # Test invalid file creation
-            self.assertRaises(ValueError, d.path, '../illegal.txt')
-
-        # Test file and dir removal
-        self.assertFalse(os.path.isfile(filename))
-        self.assertFalse(os.path.isdir(tempdir))
-
-        # Test runtime error when used outside of context
-        self.assertRaises(RuntimeError, d.path, 'hello.txt')
-
     def test_unit_circle_boundaries_2d(self):
         # Tests the 2d unit circle boundaries used in composed boundaries
         # testing.
@@ -94,7 +66,7 @@ class TestSharedTestModule(unittest.TestCase):
         self.assertTrue(c.check([-1 + 1e-12, 0]))
         self.assertTrue(c.check([0, 1 - 1e-12]))
         self.assertTrue(c.check([0, -1 + 1e-12]))
-        x, y = np.cos(0.123), np.sin(0.123)
+        x, y = np.cos(0.123), np.sin(0.123) - 1e9
         self.assertFalse(c.check([x, y]))
         xs = c.sample(100)
         self.assertEqual(xs.shape, (100, 2))

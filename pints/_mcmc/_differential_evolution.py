@@ -44,7 +44,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
     """
 
     def __init__(self, chains, x0, sigma0=None):
-        super(DifferentialEvolutionMCMC, self).__init__(chains, x0, sigma0)
+        super().__init__(chains, x0, sigma0)
 
         # Need at least 3 chains
         if self._n_chains < 3:
@@ -176,6 +176,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 5
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Differential Evolution MCMC'

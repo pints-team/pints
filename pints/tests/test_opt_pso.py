@@ -6,14 +6,17 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import os
 import re
+import tempfile
 import unittest
+
 import numpy as np
 
 import pints
 import pints.toy
 
-from shared import StreamCapture, TemporaryDirectory, CircularBoundaries
+from shared import StreamCapture, CircularBoundaries
 
 
 debug = False
@@ -145,8 +148,8 @@ class TestPSO(unittest.TestCase):
         opt = pints.OptimisationController(r, x, s, b, method=method)
         opt.set_max_iterations(10)
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                filename = d.path('test.txt')
+            with tempfile.TemporaryDirectory() as d:
+                filename = os.path.join(d, 'test.txt')
                 opt.set_log_to_screen(False)
                 opt.set_log_to_file(filename)
                 opt.run()

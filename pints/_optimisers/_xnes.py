@@ -36,7 +36,7 @@ class XNES(pints.PopulationBasedOptimiser):
 
     """
     def __init__(self, x0, sigma0=None, boundaries=None):
-        super(XNES, self).__init__(x0, sigma0, boundaries)
+        super().__init__(x0, sigma0, boundaries)
 
         # Set initial state
         self._running = False
@@ -131,6 +131,7 @@ class XNES(pints.PopulationBasedOptimiser):
         # Update optimiser state
         self._running = True
 
+    @classmethod
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'Exponential Natural Evolution Strategy (xNES)'
