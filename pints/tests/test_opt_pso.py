@@ -139,7 +139,7 @@ class TestPSO(unittest.TestCase):
         for line in lines[5:-1]:
             self.assertTrue(pattern.match(line))
         self.assertEqual(
-            lines[-1], 'Halting: Maximum number of iterations (10) reached.')
+            lines[-1], 'Halting: Maximum number of iterations reached (10).')
 
         # Log to file
         opt = pints.OptimisationController(r, x, s, b, method=method)

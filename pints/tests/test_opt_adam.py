@@ -94,7 +94,6 @@ class TestAdam(unittest.TestCase):
         r, x, s = self.problem()
         opt = pints.OptimisationController(r, x, s, method=method)
         opt.set_log_to_screen(True)
-        opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(3)
         with StreamCapture() as c:
             opt.run()

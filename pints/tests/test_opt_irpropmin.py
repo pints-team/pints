@@ -190,7 +190,6 @@ class TestIRPropMin(unittest.TestCase):
         r, x, s = self.problem()
         opt = pints.OptimisationController(r, x, s, method=method)
         opt.set_log_to_screen(True)
-        opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(2)
         with StreamCapture() as c:
             opt.run()
@@ -207,7 +206,6 @@ class TestIRPropMin(unittest.TestCase):
         r, x, s = self.problem()
         opt = pints.OptimisationController(r, x, s, method=method)
         opt.set_log_to_screen(True)
-        opt.set_max_unchanged_iterations(None)
         opt.set_max_iterations(4)
         opt.set_log_interval(1)
         opt.optimiser().set_min_step_size(0.03)

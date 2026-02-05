@@ -197,7 +197,8 @@ class TestNelderMead(unittest.TestCase):
             '400   416    0         0          0:00.0',
             '420   443    0         0          0:00.0',
             '428   452    0         0          0:00.0',
-            'Halting: No significant change for 200 iterations.',
+            'Halting: No significant change in best function evaluation'
+            ' for 200 iterations.',
         )
 
         # Compare lenght of log
