@@ -13,9 +13,11 @@ import numpy as np
 class SchloglModel(MarkovJumpModel):
     r"""
     Schlogl's system of chemical reactions has a single type of molecules and
-    starts with an initial count :math:`A(0)`. The evolution of the molecule
-    count is defined through the rates :math:`k_1`, :math:`k_2`, :math:`k_3`
-    and :math:`k_4` and the following equations:
+    starts with an initial count :math:`A(0)`.
+
+    The evolution of the molecule count is defined through the rates
+    :math:`k_1`, :math:`k_2`, :math:`k_3` and :math:`k_4` and the following
+    equations:
 
     ..math::
         2A \xrightarrow{k_1} 3A
@@ -23,7 +25,7 @@ class SchloglModel(MarkovJumpModel):
         0 \xrightarrow{k_3} A
         A \xrightarrow{k_4} 0
 
-    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends: :class:`pints.toy.stochastic.MarkovJumpModel`.
 
     Parameters
     ----------

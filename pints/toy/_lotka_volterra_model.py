@@ -49,7 +49,7 @@ class LotkaVolterraModel(ToyODEModel, pints.ForwardModelS1):
             self.set_initial_conditions(y0)
 
     def _dfdp(self, z, t, p):
-        """ See :meth:`pints.ToyModel.jacobian()`. """
+        """ See :meth:`pints.toy.ToyModel.jacobian()`. """
         x, y = z
         a, b, c, d = [float(param) for param in p]
         ret = np.empty((2, 4))
@@ -64,7 +64,7 @@ class LotkaVolterraModel(ToyODEModel, pints.ForwardModelS1):
         return ret
 
     def jacobian(self, z, t, p):
-        """ See :meth:`pints.ToyModel.jacobian()`. """
+        """ See :meth:`pints.toy.ToyModel.jacobian()`. """
         x, y = z
         a, b, c, d = [float(param) for param in p]
         ret = np.empty((2, 2))

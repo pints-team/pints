@@ -29,7 +29,7 @@ class LogisticModel(pints.ForwardModelS1, ToyModel):
     :math:`k`. The initial population size :math:`p_0 = f(0)` is a fixed
     (known) parameter in the model.
 
-    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModelS1`, :class:`pints.toy.ToyModel`.
 
     Parameters
     ----------

@@ -30,7 +30,7 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
     the system. The input order of parameters of interest is
     :math:`\\{ P_0, \\nu, k_1, h \\}`.
 
-    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModelS1`, :class:`pints.toy.ToyODEModel`.
 
     Parameters
     ----------
@@ -58,7 +58,7 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
             self.set_m0(m0)
 
     def _dfdp(self, state, time, parameters):
-        """ See :meth:`pints.ToyModel.jacobian()`. """
+        """ See :meth:`pints.toy.ToyModel.jacobian()`. """
         m, p1, p2 = state
         P0, v, k1, h = parameters
         p2_over_p0 = p2 / P0
@@ -96,7 +96,7 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
         return [self._p0[0], self._p0[1], self._kdeg]
 
     def jacobian(self, state, time, parameters):
-        """ See :meth:`pints.ToyModel.jacobian()`. """
+        """ See :meth:`pints.toy.ToyModel.jacobian()`. """
         m, p1, p2 = state
         P0, v, k1, h = parameters
         k_deg = self._kdeg
@@ -116,7 +116,7 @@ class Hes1Model(ToyODEModel, pints.ForwardModelS1):
         return ret
 
     def n_states(self):
-        """ See :meth:`pints.ToyODEModel.n_states()`. """
+        """ See :meth:`pints.toy.ToyODEModel.n_states()`. """
         return 3
 
     def n_outputs(self):
