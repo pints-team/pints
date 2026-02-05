@@ -20,11 +20,9 @@ Example::
 
 .. autoclass:: LogPrior
 
-.. autoclass:: LogPosterior
-
-.. autoclass:: PooledLogPDF
+.. autoclass:: LogLikelihood
 
 .. autoclass:: ProblemLogLikelihood
 
-.. autoclass:: SumOfIndependentLogPDFs
+.. autoclass:: LogPosterior
 

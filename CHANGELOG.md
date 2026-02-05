@@ -6,13 +6,17 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 ### Added
+- [#1724](https://github.com/pints-team/pints/pull/1724) Reintroduced the `LogLikelihood` class, to differentiate between probabilities of parameters and probabilities of data.
+- [#1724](https://github.com/pints-team/pints/pull/1724) Added `PooledLogLikelihood` and `SumOfIndependentLogLikelihoods`.
 - [#1716](https://github.com/pints-team/pints/pull/1716) PINTS is now tested on Python 3.14.
 - [#1715](https://github.com/pints-team/pints/pull/1715) Added methods `ProblemErrorMeasure.problem()`, `ProblemLogLikelihood.problem()`, `SingleOutputProblem.model()` and `MultiOutputProblem.model()`.
 - [#1508](https://github.com/pints-team/pints/pull/1508) Added a method `OptimisationController.set_parameter_tolerance` that allows methods to stop after a fixed number of iterations with no significant movement in parameter space.
 ### Changed
+- [#1724](https://github.com/pints-team/pints/pull/1724) Several methods that accepted `LogPDF`s now specifically require `LogLikelihood`s (e.g. `LogPosterior`, `NestedController`).
 - [#1713](https://github.com/pints-team/pints/pull/1713) PINTS now requires matplotlib 2.2 or newer.
 ### Deprecated
 - [#1508](https://github.com/pints-team/pints/pull/1508) The methods `OptimisationController.max_unchanged_iterations` and `set_max_unchanged_iterations` are deprecated, in favour of `function_tolerance` and `set_function_tolerance` respectively.
+- [#1724](https://github.com/pints-team/pints/pull/1724) The classes `PooledLogPDF` and `SumOfIndependentLogPDFs` are deprecated, in favour of `PooledLogLikelihood` and `SumOfIndependentLogLikelihoods` respectively.
 ### Removed
 ### Fixed
 - [#1713](https://github.com/pints-team/pints/pull/1713) Fixed Numpy 2.4.1 compatibility issues.

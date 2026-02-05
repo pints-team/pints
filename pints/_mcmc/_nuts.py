@@ -772,7 +772,7 @@ class NoUTurnMCMC(pints.SingleChainMCMC):
             raise RuntimeError('Tell called before proposal was set.')
         self._ready_for_tell = False
 
-        # send log likelihood and gradient to nuts coroutine,
+        # send log pdf and gradient to nuts coroutine,
         # return value is the next theta to evaluate at but not necessarily the
         # proposed mcmc step. Final mcmc proposal is distinguished from
         # intermediate steps by tuple type.

@@ -189,7 +189,7 @@ class RectangularBoundaries(Boundaries):
 class LogPDFBoundaries(Boundaries):
     """
     Uses a :class:`pints.LogPDF` (e.g. a :class:`LogPrior`) as boundaries),
-    accepting log-likelihoods above a given threshold as within bounds.
+    accepting log-pdfs above a given threshold as within bounds.
 
     For a :class:`pints.LogPrior` based on :class:`pints.Boundaries`, see
     :class:`pints.UniformLogPrior`.

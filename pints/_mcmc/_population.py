@@ -294,11 +294,11 @@ class PopulationMCMC(pints.SingleChainMCMC):
         f_xi = self._current_log_pdfs[self._i]
         f_xj = self._current_log_pdfs[self._j]
 
-        # Calculate current tempered log likelihoods
+        # Calculate current tempered log pdfs
         fi_xi = (1 - self._schedule[self._i]) * f_xi
         fj_xj = (1 - self._schedule[self._j]) * f_xj
 
-        # Calculate tempered log likelihoods of proposed points, after exchange
+        # Calculate tempered log pdfs of proposed points, after exchange
         # Where fi_j = f(T[i], x[j]) = tempered log pdf for x[j] with T[i]
         fi_xj = (1 - self._schedule[self._i]) * f_xj
         fj_xi = (1 - self._schedule[self._j]) * f_xi

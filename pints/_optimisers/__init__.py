@@ -454,8 +454,8 @@ class OptimisationController(object):
 
         #
         # Stopping criteria
-        # Note that we always minimise: likelihoods are wrapped in an Error
-        # class that multiplies by -1
+        # Note that we always minimise: PDFs are wrapped in an Error class that
+        # multiplies by -1
         #
 
         # Maximum iterations

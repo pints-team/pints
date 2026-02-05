@@ -83,7 +83,7 @@ class TestNestedController(unittest.TestCase):
         # First arg must be a log likelihood
         self.assertRaisesRegex(
             ValueError, 'must extend pints.LogLikelihood',
-            pints.NestedController, 'hello', self.log_prior)
+            pints.NestedController, self.log_prior, self.log_prior)
 
         # First arg must be a log prior
         self.assertRaisesRegex(
