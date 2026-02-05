@@ -77,7 +77,7 @@ class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
                 raise ValueError('Initial value must have size 2.')
 
     def _dfdp(self, y, t, p):
-        """ See :meth:`pints.ToyODEModel._dfdp()`. """
+        """ See :meth:`pints.toy.ToyODEModel._dfdp()`. """
         V, R = y
         a, b, c = [float(param) for param in p]
         ret = np.empty((2, 3))
@@ -90,7 +90,7 @@ class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
         return ret
 
     def jacobian(self, y, t, p):
-        """ See :meth:`pints.ToyODEModel.jacobian()`. """
+        """ See :meth:`pints.toy.ToyODEModel.jacobian()`. """
         V, R = y
         a, b, c = [float(param) for param in p]
         ret = np.empty((2, 2))
@@ -109,7 +109,7 @@ class FitzhughNagumoModel(ToyODEModel, pints.ForwardModelS1):
         return 3
 
     def _rhs(self, y, t, p):
-        """ See :meth:`pints.ToyODEModel._rhs()`. """
+        """ See :meth:`pints.toy.ToyODEModel._rhs()`. """
         V, R = y
         a, b, c = [float(x) for x in p]
         dV_dt = (V - V**3 / 3 + R) * c

@@ -15,7 +15,7 @@ class EightSchoolsLogPDF(ToyLogPDF):
     r"""
     The classic Eight Schools example that is discussed in [1]_.
 
-    The aim of this model (implemented as a :class:`pints.ToyLogPDF`) is to
+    The aim of this model (implemented as a :class:`pints.toy.ToyLogPDF`) is to
     determine the effects of coaching on SAT scores in 8 schools (each school
     being denoted by subscript j in the following equations). It it used
     by statisticians to illustrate how hierarchical models can quite easily

@@ -23,7 +23,7 @@ class ConeLogPDF(ToyLogPDF):
     mean and variance that are returned relate to expectations on ``|x|`` not
     the multidimensional ``x``.
 
-    Extends :class:`pints.LogPDF`.
+    Extends :class:`pints.toy.ToyLogPDF`.
 
     Parameters
     ----------

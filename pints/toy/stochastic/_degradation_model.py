@@ -19,7 +19,7 @@ class DegradationModel(MarkovJumpModel):
     .. math::
         A \xrightarrow{k} 0
 
-    Extends :class:`pints.MarkovJumpModel`.
+    Extends: :class:`pints.toy.stochastic.MarkovJumpModel`.
 
     Parameters
     ----------
