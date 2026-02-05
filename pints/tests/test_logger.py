@@ -8,10 +8,12 @@
 #
 import os
 import sys
-import pints
+import tempfile
 import unittest
 
-from shared import StreamCapture, TemporaryDirectory
+import pints
+
+from shared import StreamCapture
 
 
 data = [
@@ -175,8 +177,8 @@ class TestLogger(unittest.TestCase):
     def test_file_writing_txt(self):
         # Log with file-only fields, and shorter name, and file
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                filename = d.path('test.txt')
+            with tempfile.TemporaryDirectory() as d:
+                filename = os.path.join(d, 'test.txt')
                 log = pints.Logger()
                 log.set_filename(filename)
                 log.add_counter('#', width=2)
@@ -195,8 +197,8 @@ class TestLogger(unittest.TestCase):
     def test_file_writing_csv(self):
         # Repeat in csv mode
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                filename = d.path('test.csv')
+            with tempfile.TemporaryDirectory() as d:
+                filename = os.path.join(d, 'test.csv')
                 log = pints.Logger()
                 log.set_filename(filename, csv=True)
                 log.add_counter('#', width=2)
@@ -215,8 +217,8 @@ class TestLogger(unittest.TestCase):
     def test_file_writing_no_screen_csv(self):
         # Repeat without screen output
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                filename = d.path('test.csv')
+            with tempfile.TemporaryDirectory() as d:
+                filename = os.path.join(d, 'test.csv')
                 log = pints.Logger()
                 log.set_filename(filename, csv=True)
                 log.set_stream(None)
@@ -236,8 +238,8 @@ class TestLogger(unittest.TestCase):
     def test_file_writing_no_screen_txt(self):
         # Repeat without screen output, outside of csv mode
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                filename = d.path('test.csv')
+            with tempfile.TemporaryDirectory() as d:
+                filename = os.path.join(d, 'test.csv')
                 log = pints.Logger()
                 log.set_filename(filename, csv=False)
                 log.set_stream(None)
@@ -256,8 +258,8 @@ class TestLogger(unittest.TestCase):
 
         # Unset file output
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                filename = d.path('test.csv')
+            with tempfile.TemporaryDirectory() as d:
+                filename = os.path.join(d, 'test.csv')
                 log = pints.Logger()
                 log.set_filename(filename, csv=False)
                 log.set_filename(None)
@@ -285,8 +287,8 @@ class TestLogger(unittest.TestCase):
 
         # Repeat on stderr
         with StreamCapture(stdout=True, stderr=True) as c:
-            with TemporaryDirectory() as d:
-                filename = d.path('test.csv')
+            with tempfile.TemporaryDirectory() as d:
+                filename = os.path.join(d, 'test.csv')
                 log = pints.Logger()
                 log.set_filename(filename, csv=False)
                 log.set_stream(sys.stderr)

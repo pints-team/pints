@@ -7,16 +7,19 @@
 # copyright notice and full license details.
 #
 import os
+import tempfile
+import unittest
+import unittest.mock
+import warnings
+
+import numpy as np
+import numpy.testing as npt
+
 import pints
 import pints.io
 import pints.toy
-import unittest
-import unittest.mock
-import numpy as np
-import numpy.testing as npt
-import warnings
 
-from shared import StreamCapture, TemporaryDirectory
+from shared import StreamCapture
 
 
 debug = False
@@ -574,8 +577,8 @@ class TestMCMCController(unittest.TestCase):
         # With output to file
         np.random.seed(1)
         with StreamCapture() as capture:
-            with TemporaryDirectory() as d:
-                filename = d.path('test.txt')
+            with tempfile.TemporaryDirectory() as d:
+                filename = os.path.join(d, 'test.txt')
                 mcmc = pints.MCMCController(self.log_posterior, nchains, xs)
                 mcmc.set_initial_phase_iterations(5)
                 mcmc.set_max_iterations(10)
@@ -951,15 +954,15 @@ class TestMCMCControllerLogging(unittest.TestCase):
         mcmc.set_log_to_file(False)
 
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                cpath = d.path('chain.csv')
-                p0 = d.path('chain_0.csv')
-                p1 = d.path('chain_1.csv')
-                p2 = d.path('chain_2.csv')
-                epath = d.path('evals.csv')
-                p3 = d.path('evals_0.csv')
-                p4 = d.path('evals_1.csv')
-                p5 = d.path('evals_2.csv')
+            with tempfile.TemporaryDirectory() as d:
+                cpath = os.path.join(d, 'chain.csv')
+                p0 = os.path.join(d, 'chain_0.csv')
+                p1 = os.path.join(d, 'chain_1.csv')
+                p2 = os.path.join(d, 'chain_2.csv')
+                epath = os.path.join(d, 'evals.csv')
+                p3 = os.path.join(d, 'evals_0.csv')
+                p4 = os.path.join(d, 'evals_1.csv')
+                p5 = os.path.join(d, 'evals_2.csv')
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
@@ -1005,15 +1008,15 @@ class TestMCMCControllerLogging(unittest.TestCase):
         mcmc.set_log_to_file(False)
 
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                cpath = d.path('chain.csv')
-                p0 = d.path('chain_0.csv')
-                p1 = d.path('chain_1.csv')
-                p2 = d.path('chain_2.csv')
-                epath = d.path('evals.csv')
-                p3 = d.path('evals_0.csv')
-                p4 = d.path('evals_1.csv')
-                p5 = d.path('evals_2.csv')
+            with tempfile.TemporaryDirectory() as d:
+                cpath = os.path.join(d, 'chain.csv')
+                p0 = os.path.join(d, 'chain_0.csv')
+                p1 = os.path.join(d, 'chain_1.csv')
+                p2 = os.path.join(d, 'chain_2.csv')
+                epath = os.path.join(d, 'evals.csv')
+                p3 = os.path.join(d, 'evals_0.csv')
+                p4 = os.path.join(d, 'evals_1.csv')
+                p5 = os.path.join(d, 'evals_2.csv')
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
@@ -1067,15 +1070,15 @@ class TestMCMCControllerLogging(unittest.TestCase):
         mcmc.set_chain_storage(False)
 
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                cpath = d.path('chain.csv')
-                p0 = d.path('chain_0.csv')
-                p1 = d.path('chain_1.csv')
-                p2 = d.path('chain_2.csv')
-                epath = d.path('evals.csv')
-                p3 = d.path('evals_0.csv')
-                p4 = d.path('evals_1.csv')
-                p5 = d.path('evals_2.csv')
+            with tempfile.TemporaryDirectory() as d:
+                cpath = os.path.join(d, 'chain.csv')
+                p0 = os.path.join(d, 'chain_0.csv')
+                p1 = os.path.join(d, 'chain_1.csv')
+                p2 = os.path.join(d, 'chain_2.csv')
+                epath = os.path.join(d, 'evals.csv')
+                p3 = os.path.join(d, 'evals_0.csv')
+                p4 = os.path.join(d, 'evals_1.csv')
+                p5 = os.path.join(d, 'evals_2.csv')
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
@@ -1126,15 +1129,15 @@ class TestMCMCControllerLogging(unittest.TestCase):
         mcmc.set_chain_storage(False)
 
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                cpath = d.path('chain.csv')
-                p0 = d.path('chain_0.csv')
-                p1 = d.path('chain_1.csv')
-                p2 = d.path('chain_2.csv')
-                epath = d.path('evals.csv')
-                p3 = d.path('evals_0.csv')
-                p4 = d.path('evals_1.csv')
-                p5 = d.path('evals_2.csv')
+            with tempfile.TemporaryDirectory() as d:
+                cpath = os.path.join(d, 'chain.csv')
+                p0 = os.path.join(d, 'chain_0.csv')
+                p1 = os.path.join(d, 'chain_1.csv')
+                p2 = os.path.join(d, 'chain_2.csv')
+                epath = os.path.join(d, 'evals.csv')
+                p3 = os.path.join(d, 'evals_0.csv')
+                p4 = os.path.join(d, 'evals_1.csv')
+                p5 = os.path.join(d, 'evals_2.csv')
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
@@ -1193,15 +1196,15 @@ class TestMCMCControllerLogging(unittest.TestCase):
         mcmc.set_chain_storage(False)
 
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                cpath = d.path('chain.csv')
-                p0 = d.path('chain_0.csv')
-                p1 = d.path('chain_1.csv')
-                p2 = d.path('chain_2.csv')
-                epath = d.path('evals.csv')
-                p3 = d.path('evals_0.csv')
-                p4 = d.path('evals_1.csv')
-                p5 = d.path('evals_2.csv')
+            with tempfile.TemporaryDirectory() as d:
+                cpath = os.path.join(d, 'chain.csv')
+                p0 = os.path.join(d, 'chain_0.csv')
+                p1 = os.path.join(d, 'chain_1.csv')
+                p2 = os.path.join(d, 'chain_2.csv')
+                epath = os.path.join(d, 'evals.csv')
+                p3 = os.path.join(d, 'evals_0.csv')
+                p4 = os.path.join(d, 'evals_1.csv')
+                p5 = os.path.join(d, 'evals_2.csv')
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
@@ -1248,15 +1251,15 @@ class TestMCMCControllerLogging(unittest.TestCase):
         mcmc.set_log_to_file(False)
 
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                cpath = d.path('chain.csv')
-                p0 = d.path('chain_0.csv')
-                p1 = d.path('chain_1.csv')
-                p2 = d.path('chain_2.csv')
-                epath = d.path('evals.csv')
-                p3 = d.path('evals_0.csv')
-                p4 = d.path('evals_1.csv')
-                p5 = d.path('evals_2.csv')
+            with tempfile.TemporaryDirectory() as d:
+                cpath = os.path.join(d, 'chain.csv')
+                p0 = os.path.join(d, 'chain_0.csv')
+                p1 = os.path.join(d, 'chain_1.csv')
+                p2 = os.path.join(d, 'chain_2.csv')
+                epath = os.path.join(d, 'evals.csv')
+                p3 = os.path.join(d, 'evals_0.csv')
+                p4 = os.path.join(d, 'evals_1.csv')
+                p5 = os.path.join(d, 'evals_2.csv')
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(None)
@@ -1311,15 +1314,15 @@ class TestMCMCControllerLogging(unittest.TestCase):
         mcmc.set_log_to_file(False)
 
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                cpath = d.path('chain.csv')
-                p0 = d.path('chain_0.csv')
-                p1 = d.path('chain_1.csv')
-                p2 = d.path('chain_2.csv')
-                epath = d.path('evals.csv')
-                p3 = d.path('evals_0.csv')
-                p4 = d.path('evals_1.csv')
-                p5 = d.path('evals_2.csv')
+            with tempfile.TemporaryDirectory() as d:
+                cpath = os.path.join(d, 'chain.csv')
+                p0 = os.path.join(d, 'chain_0.csv')
+                p1 = os.path.join(d, 'chain_1.csv')
+                p2 = os.path.join(d, 'chain_2.csv')
+                epath = os.path.join(d, 'evals.csv')
+                p3 = os.path.join(d, 'evals_0.csv')
+                p4 = os.path.join(d, 'evals_1.csv')
+                p5 = os.path.join(d, 'evals_2.csv')
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
@@ -1379,15 +1382,15 @@ class TestMCMCControllerLogging(unittest.TestCase):
         mcmc.set_log_to_file(False)
 
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                cpath = d.path('chain.csv')
-                p0 = d.path('chain_0.csv')
-                p1 = d.path('chain_1.csv')
-                p2 = d.path('chain_2.csv')
-                epath = d.path('evals.csv')
-                p3 = d.path('evals_0.csv')
-                p4 = d.path('evals_1.csv')
-                p5 = d.path('evals_2.csv')
+            with tempfile.TemporaryDirectory() as d:
+                cpath = os.path.join(d, 'chain.csv')
+                p0 = os.path.join(d, 'chain_0.csv')
+                p1 = os.path.join(d, 'chain_1.csv')
+                p2 = os.path.join(d, 'chain_2.csv')
+                epath = os.path.join(d, 'evals.csv')
+                p3 = os.path.join(d, 'evals_0.csv')
+                p4 = os.path.join(d, 'evals_1.csv')
+                p5 = os.path.join(d, 'evals_2.csv')
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
@@ -1446,15 +1449,15 @@ class TestMCMCControllerLogging(unittest.TestCase):
         mcmc.set_log_to_file(False)
 
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                cpath = d.path('chain.csv')
-                p0 = d.path('chain_0.csv')
-                p1 = d.path('chain_1.csv')
-                p2 = d.path('chain_2.csv')
-                epath = d.path('evals.csv')
-                p3 = d.path('evals_0.csv')
-                p4 = d.path('evals_1.csv')
-                p5 = d.path('evals_2.csv')
+            with tempfile.TemporaryDirectory() as d:
+                cpath = os.path.join(d, 'chain.csv')
+                p0 = os.path.join(d, 'chain_0.csv')
+                p1 = os.path.join(d, 'chain_1.csv')
+                p2 = os.path.join(d, 'chain_2.csv')
+                epath = os.path.join(d, 'evals.csv')
+                p3 = os.path.join(d, 'evals_0.csv')
+                p4 = os.path.join(d, 'evals_1.csv')
+                p5 = os.path.join(d, 'evals_2.csv')
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
@@ -1510,15 +1513,15 @@ class TestMCMCControllerLogging(unittest.TestCase):
         mcmc.set_log_to_file(False)
 
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                cpath = d.path('chain.csv')
-                p0 = d.path('chain_0.csv')
-                p1 = d.path('chain_1.csv')
-                p2 = d.path('chain_2.csv')
-                epath = d.path('evals.csv')
-                p3 = d.path('evals_0.csv')
-                p4 = d.path('evals_1.csv')
-                p5 = d.path('evals_2.csv')
+            with tempfile.TemporaryDirectory() as d:
+                cpath = os.path.join(d, 'chain.csv')
+                p0 = os.path.join(d, 'chain_0.csv')
+                p1 = os.path.join(d, 'chain_1.csv')
+                p2 = os.path.join(d, 'chain_2.csv')
+                epath = os.path.join(d, 'evals.csv')
+                p3 = os.path.join(d, 'evals_0.csv')
+                p4 = os.path.join(d, 'evals_1.csv')
+                p5 = os.path.join(d, 'evals_2.csv')
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
@@ -1575,15 +1578,15 @@ class TestMCMCControllerLogging(unittest.TestCase):
         mcmc.set_log_to_file(False)
 
         with StreamCapture() as c:
-            with TemporaryDirectory() as d:
-                cpath = d.path('chain.csv')
-                p0 = d.path('chain_0.csv')
-                p1 = d.path('chain_1.csv')
-                p2 = d.path('chain_2.csv')
-                epath = d.path('evals.csv')
-                p3 = d.path('evals_0.csv')
-                p4 = d.path('evals_1.csv')
-                p5 = d.path('evals_2.csv')
+            with tempfile.TemporaryDirectory() as d:
+                cpath = os.path.join(d, 'chain.csv')
+                p0 = os.path.join(d, 'chain_0.csv')
+                p1 = os.path.join(d, 'chain_1.csv')
+                p2 = os.path.join(d, 'chain_2.csv')
+                epath = os.path.join(d, 'evals.csv')
+                p3 = os.path.join(d, 'evals_0.csv')
+                p4 = os.path.join(d, 'evals_1.csv')
+                p5 = os.path.join(d, 'evals_2.csv')
 
                 # Test files aren't created before mcmc runs
                 mcmc.set_chain_filename(cpath)
@@ -1754,13 +1757,13 @@ class TestMCMCControllerSingleChainStorage(unittest.TestCase):
             sampler.set_chain(chains[i])
 
         # Run, while logging to disk
-        with TemporaryDirectory() as d:
+        with tempfile.TemporaryDirectory() as d:
             # Store chains
-            chain_path = d.path('chain.csv')
+            chain_path = os.path.join(d, 'chain.csv')
             mcmc.set_chain_filename(chain_path)
 
             # Store log pdfs
-            evals_path = d.path('evals.csv')
+            evals_path = os.path.join(d, 'evals.csv')
             mcmc.set_log_pdf_filename(evals_path)
 
             # Run
@@ -1936,13 +1939,13 @@ class TestMCMCControllerMultiChainStorage(unittest.TestCase):
         mcmc.sampler().set_chains(chains)
 
         # Run, while logging to disk
-        with TemporaryDirectory() as d:
+        with tempfile.TemporaryDirectory() as d:
             # Store chains
-            chain_path = d.path('chain.csv')
+            chain_path = os.path.join(d, 'chain.csv')
             mcmc.set_chain_filename(chain_path)
 
             # Store log pdfs
-            evals_path = d.path('evals.csv')
+            evals_path = os.path.join(d, 'evals.csv')
             mcmc.set_log_pdf_filename(evals_path)
 
             # Run

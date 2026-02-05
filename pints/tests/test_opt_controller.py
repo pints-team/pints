@@ -6,6 +6,8 @@
 # released under the BSD 3-clause license. See accompanying LICENSE.md for
 # copyright notice and full license details.
 #
+import os
+import tempfile
 import unittest
 import warnings
 
@@ -14,7 +16,7 @@ import numpy as np
 import pints
 import pints.toy
 
-from shared import StreamCapture, TemporaryDirectory
+from shared import StreamCapture
 
 debug = False
 method = pints.XNES
@@ -105,8 +107,8 @@ class TestOptimisationController(unittest.TestCase):
         opt.set_callback(cb)
         opt.set_log_to_screen(False)
         opt.set_log_interval(1)
-        with TemporaryDirectory() as d:
-            p = d.path('out.csv')
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, 'out.csv')
             opt.set_log_to_file(p, csv=True)
             x1, f1 = opt.run()
             csv = np.genfromtxt(p, delimiter=',', skip_header=1)[:-1]
