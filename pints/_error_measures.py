@@ -9,7 +9,7 @@ import pints
 import numpy as np
 
 
-class ErrorMeasure(object):
+class ErrorMeasure():
     """
     Abstract base class for objects that calculate some scalar measure of
     goodness-of-fit (for a model and a data set), such that a smaller value

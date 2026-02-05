@@ -17,7 +17,7 @@ def strfloat(x):
     return pints.FLOAT_FORMAT.format(float(x))
 
 
-class Timer(object):
+class Timer():
     """
     Provides accurate timing.
 

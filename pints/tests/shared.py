@@ -15,7 +15,7 @@ import numpy as np
 import pints
 
 
-class StreamCapture(object):
+class StreamCapture():
     """
     A context manager that redirects and captures the output stdout, stderr,
     or both.
@@ -131,7 +131,7 @@ class StreamCapture(object):
         return self._stderr_captured    # Could be None
 
 
-class SubCapture(object):
+class SubCapture():
     """
     A context manager that redirects and captures the standard and error output
     of the current process, using low-level file descriptor duplication.

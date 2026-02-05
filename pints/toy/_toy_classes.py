@@ -37,7 +37,7 @@ class ToyLogPDF(pints.LogPDF):
         raise NotImplementedError
 
 
-class ToyModel(object):
+class ToyModel():
     """
     Defines an interface for toy problems.
 

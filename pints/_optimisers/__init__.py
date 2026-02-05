@@ -336,7 +336,7 @@ class PopulationBasedOptimiser(Optimiser):
         self.set_population_size(x[0])
 
 
-class OptimisationController(object):
+class OptimisationController():
     """
     Finds the parameter values that minimise an :class:`ErrorMeasure` or
     maximise a :class:`LogPDF`.

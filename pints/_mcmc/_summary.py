@@ -13,7 +13,7 @@ import warnings
 from tabulate import tabulate
 
 
-class MCMCSummary(object):
+class MCMCSummary():
     """
     Calculates and prints key summaries of posterior samples and diagnostic
     quantities from MCMC chains.

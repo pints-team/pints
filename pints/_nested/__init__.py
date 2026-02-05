@@ -227,7 +227,7 @@ class NestedSampler(pints.TunableMethod):
         return proposed, winners
 
 
-class NestedController(object):
+class NestedController():
     """
     Uses nested sampling to sample from a posterior distribution.
 
