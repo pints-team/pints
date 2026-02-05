@@ -131,6 +131,7 @@ class XNES(pints.PopulationBasedOptimiser):
         # Update optimiser state
         self._running = True
 
+    @classmethod
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'Exponential Natural Evolution Strategy (xNES)'

@@ -185,6 +185,7 @@ class HamiltonianMCMC(pints.SingleChainMCMC):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 2
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Hamiltonian Monte Carlo'

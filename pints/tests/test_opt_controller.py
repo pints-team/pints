@@ -46,6 +46,7 @@ class List1DOptimiser(pints.Optimiser):
     def ask(self):
         return np.array(self.xs[self._i: self._i + self.np])
 
+    @classmethod
     def name(self):
         return 'List1D'
 

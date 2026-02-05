@@ -214,6 +214,7 @@ class DreamMCMC(pints.MultiChainMCMC):
         # logger.log(self._acceptance)
         # TODO
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'DiffeRential Evolution Adaptive Metropolis (DREAM) MCMC'

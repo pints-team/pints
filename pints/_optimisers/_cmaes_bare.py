@@ -223,6 +223,7 @@ class BareCMAES(pints.PopulationBasedOptimiser):
         # Update optimiser state
         self._running = True
 
+    @classmethod
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'Bare-bones CMA-ES'

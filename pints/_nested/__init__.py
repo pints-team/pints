@@ -93,6 +93,7 @@ class NestedSampler(pints.TunableMethod):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         raise NotImplementedError
 
+    @classmethod
     def name(self):
         """ Name of sampler """
         raise NotImplementedError

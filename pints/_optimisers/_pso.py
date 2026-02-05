@@ -172,6 +172,7 @@ class PSO(pints.PopulationBasedOptimiser):
         for f in self._fl:
             logger.log(f)
 
+    @classmethod
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'Particle Swarm Optimisation (PSO)'

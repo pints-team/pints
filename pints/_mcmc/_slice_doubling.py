@@ -385,6 +385,7 @@ class SliceDoublingMCMC(pints.SingleChainMCMC):
         """
         return self._p
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Slice Sampling - Doubling'

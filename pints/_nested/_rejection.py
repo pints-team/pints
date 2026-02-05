@@ -102,6 +102,7 @@ class NestedRejectionSampler(pints.NestedSampler):
         """
         self.set_n_active_points(x[0])
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.NestedSampler.name()`. """
         return 'Nested rejection sampler'

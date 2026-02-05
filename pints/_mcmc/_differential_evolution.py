@@ -176,6 +176,7 @@ class DifferentialEvolutionMCMC(pints.MultiChainMCMC):
         """ See :meth:`TunableMethod.n_hyper_parameters()`. """
         return 5
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Differential Evolution MCMC'

@@ -420,6 +420,7 @@ class SliceStepoutMCMC(pints.SingleChainMCMC):
         """
         return self._prob_overrelaxed
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Slice Sampling - Stepout'

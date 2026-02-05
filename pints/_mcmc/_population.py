@@ -153,6 +153,7 @@ class PopulationMCMC(pints.SingleChainMCMC):
         logger.log(self._j)
         logger.log('yes' if self._have_exchanged else 'no')
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Population MCMC'

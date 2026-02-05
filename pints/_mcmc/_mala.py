@@ -176,6 +176,7 @@ class MALAMCMC(pints.SingleChainMCMC):
         """ See :meth:`Loggable._log_write()`. """
         logger.log(self._acceptance)
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Metropolis-Adjusted Langevin Algorithm (MALA)'

@@ -165,6 +165,7 @@ class IRPropMin(pints.Optimiser):
         """ Returns the minimum step size (or ``None`` if not set). """
         return self._step_min
 
+    @classmethod
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'iRprop-'

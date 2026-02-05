@@ -161,6 +161,7 @@ class CMAES(pints.PopulationBasedOptimiser):
         # Update optimiser state
         self._running = True
 
+    @classmethod
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'Covariance Matrix Adaptation Evolution Strategy (CMA-ES)'

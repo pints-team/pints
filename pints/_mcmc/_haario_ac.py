@@ -70,6 +70,7 @@ class HaarioACMC(pints.AdaptiveCovarianceMC):
         return np.random.multivariate_normal(
             self._current, self._sigma * np.exp(self._log_lambda))
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.MCMCSampler.name()`. """
         return 'Haario adaptive covariance MCMC'

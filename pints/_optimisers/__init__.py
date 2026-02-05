@@ -186,10 +186,9 @@ class Optimiser(pints.Loggable, pints.TunableMethod):
         """
         return self.f_best()
 
+    @classmethod
     def name(self):
-        """
-        Returns this method's full name.
-        """
+        """ Returns this method's full name. """
         raise NotImplementedError
 
     def needs_sensitivities(self):

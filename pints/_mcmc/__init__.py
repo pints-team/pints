@@ -18,6 +18,7 @@ class MCMCSampler(pints.Loggable, pints.TunableMethod):
     :class:`pints.TunableMethod` interfaces.
     """
 
+    @classmethod
     def name(self):
         """
         Returns this method's full name.

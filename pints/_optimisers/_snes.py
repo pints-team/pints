@@ -120,6 +120,7 @@ class SNES(pints.PopulationBasedOptimiser):
         # Update optimiser state
         self._running = True
 
+    @classmethod
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'Seperable Natural Evolution Strategy (SNES)'

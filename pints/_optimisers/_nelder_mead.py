@@ -218,6 +218,7 @@ class NelderMead(pints.Optimiser):
         """ See: :meth:`pints.Optimiser.f_best()`. """
         return self._fs[0] if self._running else np.inf
 
+    @classmethod
     def name(self):
         """ See: :meth:`pints.Optimiser.name()`. """
         return 'Nelder-Mead'

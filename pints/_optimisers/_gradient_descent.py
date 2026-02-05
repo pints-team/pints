@@ -60,6 +60,7 @@ class GradientDescent(pints.Optimiser):
         """ Returns this optimiser's learning rate. """
         return self._eta
 
+    @classmethod
     def name(self):
         """ See :meth:`Optimiser.name()`. """
         return 'Gradient descent'

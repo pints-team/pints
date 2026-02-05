@@ -106,6 +106,7 @@ class ABCSMC(pints.ABCSampler):
             raise ValueError('Provided perturbation kernel must be an instance'
                   ' of pints.LogPrior')
 
+    @classmethod
     def name(self):
         """ See :meth:`pints.ABCSampler.name()`. """
         return 'ABC-SMC'
