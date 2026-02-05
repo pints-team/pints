@@ -42,7 +42,7 @@ class ToyModel():
     Defines an interface for toy problems.
 
     Note that toy models should extend both ``ToyModel`` and one of the forward
-    model classes, e.g. :class:`pints.ForwardModel`.
+    model classes, i.e. :class:`pints.ForwardModel` or :class:`ForwardModelS1`.
     """
     def suggested_parameters(self):
         """
@@ -68,8 +68,8 @@ class ToyODEModel(ToyModel):
     ordinary differential equation (ODE) that describes some time-series
     generating model.
 
-    Note that toy ODE models should extend both :class:`pints.ToyODEModel` and
-    one of the forward model classes, e.g. :class:`pints.ForwardModel` or
+    Note that toy ODE models should extend both :class:`pints.toy.ToyODEModel`
+    and one of the forward model classes, e.g. :class:`pints.ForwardModel` or
     :class:`pints.ForwardModelS1`.
 
     To use this class as the basis for a :class:`pints.ForwardModel`, the
@@ -77,6 +77,8 @@ class ToyODEModel(ToyModel):
 
     Models implementing :meth:`_rhs()`, :meth:`jacobian()` and :meth:`_dfdp()`
     can be used to create a :class:`pints.ForwardModelS1`.
+
+    Extends: :class:`pints.toy.ToyODEModel`.
     """
     def _dfdp(self, y, t, p):
         """

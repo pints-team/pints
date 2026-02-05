@@ -31,7 +31,7 @@ class GermanCreditHierarchicalLogPDF(ToyLogPDF):
     by creating all interactions between individual variables and themselves
     as defined in [2]_.
 
-    Extends :class:`pints.LogPDF`.
+    Extends :class:`pints.toy.ToyLogPDF`.
 
     Parameters
     ----------

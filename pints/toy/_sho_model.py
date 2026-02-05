@@ -29,7 +29,7 @@ class SimpleHarmonicOscillatorModel(pints.ForwardModelS1, ToyModel):
     ``y(0)``, its initial momentum, ``dy/dt(0)`` and the magnitude of the
     friction force, ``theta``.
 
-    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends :class:`pints.ForwardModelS1`, :class:`pints.toy.ToyModel`.
 
     References
     ----------

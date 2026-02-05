@@ -20,7 +20,7 @@ class ProductionDegradationModel(MarkovJumpModel):
     .. math::
         A \xrightarrow{k1} 0, 0 \xrightarrow{k2} A
 
-    Extends :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends: :class:`pints.toy.stochastic.MarkovJumpModel`.
 
     Parameters
     ----------

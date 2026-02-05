@@ -26,7 +26,7 @@ class AnnulusLogPDF(ToyLogPDF):
     the same radius. In two dimensions, the density looks like a circular
     annulus.
 
-    Extends :class:`pints.LogPDF`.
+    Extends :class:`pints.toy.ToyLogPDF`.
 
     Parameters
     ----------
