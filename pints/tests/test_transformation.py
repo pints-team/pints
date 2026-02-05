@@ -954,7 +954,8 @@ class TestTransformedWrappers(unittest.TestCase):
         d = 2
         t = pints.LogTransformation(2)
         r = pints.UniformLogPrior([0.1, 0.1], [0.9, 0.9])
-        tr = t.convert_log_prior(r)
+        tr = t.convert_log_pdf(r)
+        self.assertIsInstance(tr, pints.TransformedLogPrior)
 
         # Test sample
         n = 1
@@ -965,6 +966,13 @@ class TestTransformedWrappers(unittest.TestCase):
         x = tr.sample(n)
         self.assertEqual(x.shape, (n, d))
         self.assertTrue(np.all(x < 0.))
+
+        # Test deprecated alias
+        with warnings.catch_warnings(record=True) as w:
+            tr = t.convert_log_prior(r)
+        self.assertEqual(len(w), 1)
+        self.assertIn('deprecated', str(w[0].message))
+        self.assertIsInstance(tr, pints.TransformedLogPrior)
 
 
 if __name__ == '__main__':
