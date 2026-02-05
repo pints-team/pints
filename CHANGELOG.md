@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - [#1508](https://github.com/pints-team/pints/pull/1508) The methods `OptimisationController.max_unchanged_iterations` and `set_max_unchanged_iterations` are deprecated, in favour of `function_tolerance` and `set_function_tolerance` respectively.
 ### Removed
 ### Fixed
+- [#1729](https://github.com/pints-team/pints/pull/1729) The `rhat` method now raises an error if only 1 chain is passed in.
 - [#1713](https://github.com/pints-team/pints/pull/1713) Fixed Numpy 2.4.1 compatibility issues.
 - [#1690](https://github.com/pints-team/pints/pull/1690) Fixed bug in optimisation controller if population size left at `None`.
 
