@@ -72,7 +72,6 @@ class MonomialGammaHamiltonianMCMC(pints.SingleChainMCMC):
            Lawrence Cari.
            Advances in Neural Information Processing Systems (NIPS)
 
-
     .. [2] MCMC using Hamiltonian dynamics
            Radford M. Neal, Chapter 5 of the Handbook of Markov Chain Monte
            Carlo by Steve Brooks, Andrew Gelman, Galin Jones, and Xiao-Li Meng.

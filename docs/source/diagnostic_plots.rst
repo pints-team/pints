@@ -7,13 +7,13 @@ Diagnostic plots
 For users who have Matplotlib installed, Pints offers a number of diagnostic
 plots that can be used to quickly check obtained results.
 
-Plotting functions:
+Plots of functions:
 
 - :func:`function`
 - :func:`function_between_points`
 - :func:`surface`
 
-Diagnosing MCMC results:
+MCMC Diagnostic plots:
 
 - :func:`autocorrelation`
 - :func:`histogram`
@@ -21,8 +21,8 @@ Diagnosing MCMC results:
 - :func:`series`
 - :func:`trace`
 
-Functions
----------
+Plots of functions
+------------------
 
 .. autofunction:: function
 
@@ -30,8 +30,8 @@ Functions
 
 .. autofunction:: surface
 
-MCMC Diagnostics
-----------------
+MCMC Diagnostic plots
+---------------------
 
 .. autofunction:: autocorrelation
 

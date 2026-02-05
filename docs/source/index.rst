@@ -146,7 +146,6 @@ Contents
     abc_samplers/index
     boundaries
     core_classes_and_methods
-    diagnostics
     diagnostic_plots
     error_measures
     function_evaluation
@@ -155,6 +154,7 @@ Contents
     log_pdfs
     log_priors
     mcmc_samplers/index
+    mcmc_diagnostics
     nested_samplers/index
     noise_generators
     optimisers/index
