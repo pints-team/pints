@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 ### Fixed
 - [#1713](https://github.com/pints-team/pints/pull/1713) Fixed Numpy 2.4.1 compatibility issues.
+- [#1690][https://github.com/pints-team/pints/pull/1690) Fixed bug in optimisation controller if population size left at `None`.
 
 
 ## [0.5.1] - 2025-09-26
