@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 - [#1715](https://github.com/pints-team/pints/pull/1715) Added methods `ProblemErrorMeasure.problem()`, `ProblemLogLikelihood.problem()`, `SingleOutputProblem.model()` and `MultiOutputProblem.model()`.
 - [#1508](https://github.com/pints-team/pints/pull/1508) Added a method `OptimisationController.set_parameter_tolerance` that allows methods to stop after a fixed number of iterations with no significant movement in parameter space.
 ### Changed
-- [#1724](https://github.com/pints-team/pints/pull/1724) Several methods that accepted `LogPDF`s now specifically require `LogLikelihood`s (e.g. `LogPosterior`, `NestedController`).
+- [#1724](https://github.com/pints-team/pints/pull/1724) Some methods that accepted `LogPDF`s now specifically require `LogLikelihood`s (e.g. `LogPosterior`, `NestedController`).
 - [#1713](https://github.com/pints-team/pints/pull/1713) PINTS now requires matplotlib 2.2 or newer.
 ### Deprecated
 - [#1508](https://github.com/pints-team/pints/pull/1508) The methods `OptimisationController.max_unchanged_iterations` and `set_max_unchanged_iterations` are deprecated, in favour of `function_tolerance` and `set_function_tolerance` respectively.
