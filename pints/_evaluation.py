@@ -60,7 +60,7 @@ def evaluate(f, x, parallel=False, args=None):
     return evaluator.evaluate(x)
 
 
-class Evaluator(object):
+class Evaluator():
     """
     Abstract base class for classes that take a function (or callable object)
     ``f(x)`` and evaluate it for list of input values ``x``.

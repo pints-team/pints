@@ -9,7 +9,7 @@ import numpy as np
 import pints
 
 
-class ForwardModel(object):
+class ForwardModel():
 
     """
     Defines an interface for user-supplied forward models.
@@ -99,7 +99,7 @@ class ForwardModelS1(ForwardModel):
         raise NotImplementedError
 
 
-class SingleOutputProblem(object):
+class SingleOutputProblem():
 
     """
     Represents an inference problem where a model is fit to a single time
@@ -210,7 +210,7 @@ class SingleOutputProblem(object):
         return self._values
 
 
-class MultiOutputProblem(object):
+class MultiOutputProblem():
 
     """
     Represents an inference problem where a model is fit to a multi-valued time
@@ -327,7 +327,7 @@ class MultiOutputProblem(object):
         return self._values
 
 
-class TunableMethod(object):
+class TunableMethod():
 
     """
     Defines an interface for a numerical method with a given number of

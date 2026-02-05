@@ -10,7 +10,7 @@ import numpy as np
 from scipy.special import logit, expit
 
 
-class Transformation(object):
+class Transformation():
     """
     Abstract base class for objects that provide transformations between two
     parameter spaces: the model parameter space and a search space.

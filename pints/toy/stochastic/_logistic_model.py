@@ -24,7 +24,7 @@ class LogisticModel(MarkovJumpModel):
     The model is simulated using the Gillespie stochastic simulation algorithm
     [2]_, [3]_.
 
-    *Extends:* :class:`pints.ForwardModel`, :class:`pints.toy.ToyModel`.
+    Extends: :class:`pints.toy.stochastic.MarkovJumpModel`.
 
     Parameters
     ----------

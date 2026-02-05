@@ -9,7 +9,7 @@ import pints
 import numpy as np
 
 
-class Boundaries(object):
+class Boundaries():
     """
     Abstract class representing boundaries on a parameter space.
     """

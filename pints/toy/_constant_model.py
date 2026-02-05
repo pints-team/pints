@@ -8,8 +8,10 @@
 import numpy as np
 import pints
 
+from . import ToyModel
 
-class ConstantModel(pints.ForwardModelS1):
+
+class ConstantModel(ToyModel, pints.ForwardModelS1):
     r"""
     Toy model that's constant over time, linear over the parameters, mostly
     useful for unit testing.
@@ -29,7 +31,7 @@ class ConstantModel(pints.ForwardModelS1):
         \frac{\partial{f_i(t)}}{dp_j} =
             \begin{cases} i, i = j\\0, i \neq j \end{cases}
 
-    Extends :class:`pints.ForwardModelS1`.
+    Extends :class:`pints.ForwardModelS1`, :class:`pints.toy.ToyModel`.
 
     Parameters
     ----------

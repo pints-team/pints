@@ -17,7 +17,7 @@ _TIME = 3
 _TEXT = 4
 
 
-class Logger(object):
+class Logger():
     """
     Logs numbers to screen and/or a file.
 
@@ -467,7 +467,7 @@ class Logger(object):
         return '{:>3d}:{:0>4.1f}'.format(minutes, seconds)
 
 
-class Loggable(object):
+class Loggable():
     """
     Interface for classes that can log to a :class:`Logger`.
     """

@@ -9,7 +9,7 @@
 import numpy as np
 
 
-class DualAveragingAdaption(object):
+class DualAveragingAdaption():
     r"""
     Dual Averaging method to adaptively tune the step size and mass matrix of a
     Hamiltonian Monte Carlo (HMC) routine (as used e.g. in NUTS).

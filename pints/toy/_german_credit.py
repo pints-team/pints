@@ -29,7 +29,7 @@ class GermanCreditLogPDF(ToyLogPDF):
     and :math:`\sigma^2=100`. The dataset here is from [1]_ but the test
     problem is defined in [2]_.
 
-    Extends :class:`pints.LogPDF`.
+    Extends :class:`pints.toy.ToyLogPDF`.
 
     Parameters
     ----------

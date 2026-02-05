@@ -49,7 +49,7 @@ class GoodwinOscillatorModel(ToyODEModel, pints.ForwardModelS1):
         self._y0 = [0.0054, 0.053, 1.93]
 
     def _dfdp(self, state, time, parameters):
-        """ See :meth:`pints.ToyODEModel._dfdp()`. """
+        """ See :meth:`pints.toy.ToyODEModel._dfdp()`. """
         x, y, z = state
         k2, k3, m1, m2, m3 = parameters
         ret = np.empty((self.n_outputs(), self.n_parameters()))
@@ -71,7 +71,7 @@ class GoodwinOscillatorModel(ToyODEModel, pints.ForwardModelS1):
         return ret
 
     def jacobian(self, state, time, parameters):
-        """ See :meth:`pints.ToyODEModel.jacobian()`. """
+        """ See :meth:`pints.toy.ToyODEModel.jacobian()`. """
         x, y, z = state
         k2, k3, m1, m2, m3 = parameters
         ret = np.empty((self.n_outputs(), self.n_outputs()))
@@ -95,7 +95,7 @@ class GoodwinOscillatorModel(ToyODEModel, pints.ForwardModelS1):
         return 5
 
     def _rhs(self, state, time, parameters):
-        """ See :meth:`pints.ToyODEModel._rhs()`. """
+        """ See :meth:`pints.toy.ToyODEModel._rhs()`. """
         x, y, z = state
         k2, k3, m1, m2, m3 = parameters
         dxdt = 1 / (1 + z**10) - m1 * x

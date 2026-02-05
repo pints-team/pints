@@ -19,6 +19,8 @@ class MichaelisMentenModel(MarkovJumpModel):
         - X3 -> X1+X2 with rate k2
         - X3 -> X2+X4 with rate k3
 
+    Extends: :class:`pints.toy.stochastic.MarkovJumpModel`.
+
     Parameters
     ----------
     initial_molecule_count : Array of size 3 of integers
