@@ -1405,13 +1405,14 @@ class ScaledLogLikelihood(pints.ProblemLogLikelihood):
     """
 
     def __init__(self, log_likelihood):
-        super().__init__(log_likelihood._problem)
-
         # Check arguments
         if not isinstance(log_likelihood, pints.ProblemLogLikelihood):
             raise ValueError(
                 'Given log_likelihood must extend pints.ProblemLogLikelihood')
         self._log_likelihood = log_likelihood
+
+        # Call this only after checking log_likelihood type
+        super().__init__(log_likelihood._problem)
 
         # Pre-calculate parts
         self._f = 1.0 / np.prod(self._values.shape)
