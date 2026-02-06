@@ -21,6 +21,7 @@ class TestEightSchoolsLogPDF(unittest.TestCase):
 
         # Default settings
         f = pints.toy.EightSchoolsLogPDF()
+        self.assertEqual(f.n_parameters(), 10)
         f1, dp = f.evaluateS1(np.ones(10))
         self.assertEqual(f1, f(np.ones(10)))
         self.assertAlmostEqual(f1, -43.02226038161451)
