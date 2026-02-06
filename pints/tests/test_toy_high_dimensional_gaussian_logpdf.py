@@ -67,18 +67,6 @@ class TestHighDimensionalGaussianLogPDF(unittest.TestCase):
             f([1, 2]),
             scipy.stats.multivariate_normal.logpdf([1, 2], mean, cov))
 
-        # check suggested bounds
-        f = pints.toy.HighDimensionalGaussianLogPDF(dimension=2)
-        bounds = f.suggested_bounds()
-        magnitude = 3 * np.sqrt(2.0)
-        bounds1 = np.tile([-magnitude, magnitude], (2, 1))
-        bounds1 = np.transpose(bounds1).tolist()
-        self.assertTrue(np.array_equal(bounds, bounds1))
-
-        f = pints.toy.HighDimensionalGaussianLogPDF()
-        bounds = f.suggested_bounds()
-        self.assertTrue(bounds[0][0], np.sqrt(20) * 3.0)
-
         # Test kl_divergence() errors
         n = 1000
         d = f.n_parameters()

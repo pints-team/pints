@@ -153,12 +153,6 @@ class TwistedGaussianLogPDF(ToyLogPDF):
         x[:, 1] -= self._b * (x[:, 0] ** 2 - self._V)
         return x
 
-    def suggested_bounds(self):
-        """ See :meth:`pints.toy.ToyLogPDF.suggested_bounds()`. """
-        # based on independent sampling think the following hard bounds are ok
-        bounds = [[-50, 50], [-100, 100]]
-        return np.transpose(bounds).tolist()
-
     def untwist(self, samples):
         """
         De-transforms (or "untwists") a list of ``samples`` from the twisted

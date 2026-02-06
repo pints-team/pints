@@ -146,10 +146,3 @@ class HighDimensionalGaussianLogPDF(ToyLogPDF):
                 'Number of samples must be greater than or equal to 1.')
         return self._var.rvs(n_samples)
 
-    def suggested_bounds(self):
-        """ See :meth:`pints.toy.ToyLogPDF.suggested_bounds()`. """
-        # maximum variance in one dimension is n_parameters, so use
-        # 3 times sqrt of this as prior bounds
-        magnitude = 3 * np.sqrt(self.n_parameters())
-        bounds = np.tile([-magnitude, magnitude], (self.n_parameters(), 1))
-        return np.transpose(bounds).tolist()

@@ -21,6 +21,7 @@ class TestEightSchoolsLogPDF(unittest.TestCase):
 
         # Default settings
         f = pints.toy.EightSchoolsLogPDF()
+        self.assertEqual(f.n_parameters(), 10)
         f1, dp = f.evaluateS1(np.ones(10))
         self.assertEqual(f1, f(np.ones(10)))
         self.assertAlmostEqual(f1, -43.02226038161451)
@@ -82,12 +83,6 @@ class TestEightSchoolsLogPDF(unittest.TestCase):
         logp, grad = f.evaluateS1(x)
         self.assertEqual(logp, -np.inf)
         self.assertTrue(np.array_equal(grad, np.full([1, 10], -np.inf)))
-
-    def test_bounds(self):
-        """ Tests suggested_bounds() """
-        f = pints.toy.EightSchoolsLogPDF()
-        bounds = f.suggested_bounds()
-        self.assertEqual(bounds[0][1], 0)
 
 
 if __name__ == '__main__':
