@@ -46,6 +46,7 @@ Transformed classes:
  - :class:`Transformation`
  - :class:`TransformedBoundaries`
  - :class:`TransformedErrorMeasure`
+ - :class:`TransformedLogLikelihood`
  - :class:`TransformedLogPDF`
  - :class:`TransformedLogPrior`
 
@@ -75,6 +76,8 @@ Transformed objects
 .. autoclass:: TransformedBoundaries
 
 .. autoclass:: TransformedErrorMeasure
+
+.. autoclass:: TransformedLogLikelihood
 
 .. autoclass:: TransformedLogPDF
 
