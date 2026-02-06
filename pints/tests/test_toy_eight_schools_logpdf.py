@@ -83,12 +83,6 @@ class TestEightSchoolsLogPDF(unittest.TestCase):
         self.assertEqual(logp, -np.inf)
         self.assertTrue(np.array_equal(grad, np.full([1, 10], -np.inf)))
 
-    def test_bounds(self):
-        """ Tests suggested_bounds() """
-        f = pints.toy.EightSchoolsLogPDF()
-        bounds = f.suggested_bounds()
-        self.assertEqual(bounds[0][1], 0)
-
 
 if __name__ == '__main__':
     unittest.main()

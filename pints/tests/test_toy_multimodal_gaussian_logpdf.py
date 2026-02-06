@@ -131,33 +131,6 @@ class TestMultimodalGaussianLogPDF(unittest.TestCase):
         self.assertAlmostEqual(dl[1], -0.054933536830093638)
         self.assertAlmostEqual(dl[2], -0.39317158556789844)
 
-    def test_suggested_bounds(self):
-        # Tests suggested_bounds().
-
-        f = pints.toy.MultimodalGaussianLogPDF()
-        covariances = [[[5**2, 0.5 * 5 * 3, -0.1 * 5 * 2],
-                        [0.5 * 5 * 3, 3**2, 0.4 * 3 * 2],
-                        [-0.1 * 5 * 2, 0.4 * 3 * 2, 2**2]],
-                       [[5**2, 0.3 * 5 * 6, 0.2 * 5 * 7],
-                        [0.3 * 5 * 6, 6**2, -0.3 * 6 * 7],
-                        [0.2 * 5 * 7, -0.3 * 6 * 7, 7**2]]]
-        bounds = f.suggested_bounds()
-        lower = -10
-        upper = 20
-        bounds1 = np.tile([lower, upper], (2, 1))
-        bounds1 = np.transpose(bounds1).tolist()
-        self.assertTrue(np.array_equal(bounds, bounds1))
-
-        f = pints.toy.MultimodalGaussianLogPDF(
-            modes=[[1, 2, 3], [3, 4, 5]],
-            covariances=covariances)
-        bounds = f.suggested_bounds()
-        lower = 1 - 4
-        upper = 5 + 4
-        bounds1 = np.tile([lower, upper], (3, 1))
-        bounds1 = np.transpose(bounds1).tolist()
-        self.assertTrue(np.array_equal(bounds, bounds1))
-
     def test_distance_function(self):
         # Tests distance function which calls kl_divergence().
 

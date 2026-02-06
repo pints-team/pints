@@ -156,9 +156,3 @@ class EightSchoolsLogPDF(ToyLogPDF):
         """ See :meth:`pints.LogPDF.n_parameters()`. """
         return self._n_parameters
 
-    def suggested_bounds(self):
-        """ See :meth:`pints.toy.ToyLogPDF.suggested_bounds()`. """
-        magnitude = 40
-        bounds = np.tile([-magnitude, magnitude], (self.n_parameters(), 1))
-        bounds[1, 0] = 0
-        return np.transpose(bounds).tolist()
