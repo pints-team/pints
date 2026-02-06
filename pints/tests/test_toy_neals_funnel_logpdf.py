@@ -93,26 +93,6 @@ class TestNealsFunnelLogPDF(unittest.TestCase):
         x = np.ones((n, d, 2))
         self.assertRaises(ValueError, f.kl_divergence, x)
 
-    def test_suggested_bounds(self):
-        # Tests suggested_bounds().
-        # default
-        f = pints.toy.NealsFunnelLogPDF()
-        bounds = f.suggested_bounds()
-        magnitude = 30
-        bounds1 = np.tile([-magnitude, magnitude],
-                          (f._n_parameters, 1))
-        bounds1 = np.transpose(bounds1).tolist()
-        self.assertTrue(np.array_equal(bounds, bounds1))
-
-        # non-default
-        f = pints.toy.NealsFunnelLogPDF(20)
-        bounds = f.suggested_bounds()
-        magnitude = 30
-        bounds1 = np.tile([-magnitude, magnitude],
-                          (f._n_parameters, 1))
-        bounds1 = np.transpose(bounds1).tolist()
-        self.assertTrue(np.array_equal(bounds, bounds1))
-
 
 if __name__ == '__main__':
     unittest.main()

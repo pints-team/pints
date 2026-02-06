@@ -84,13 +84,6 @@ class TestTwistedGaussianLogPDF(unittest.TestCase):
         x = np.ones((n, d, 2))
         self.assertRaises(ValueError, log_pdf1.kl_divergence, x)
 
-        # Test suggested bounds
-        f = pints.toy.TwistedGaussianLogPDF()
-        bounds = f.suggested_bounds()
-        bounds1 = [[-50, 50], [-100, 100]]
-        bounds1 = np.transpose(bounds1).tolist()
-        self.assertTrue(np.array_equal(bounds, bounds1))
-
     def test_values_sensitivity(self):
         # Tests values of log pdf and sensitivities
 

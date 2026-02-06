@@ -63,8 +63,7 @@ class AnnulusLogPDF(ToyLogPDF):
     def distance(self, samples):
         """
         Calculates a measure of normed distance of samples from exact mean and
-        covariance matrix assuming uniform prior with bounds given by
-        :meth:`suggested_bounds`.
+        covariance matrix.
 
         See :meth:`ToyLogPDF.distance()`.
         """
@@ -173,16 +172,6 @@ class AnnulusLogPDF(ToyLogPDF):
         Returns ``sigma``
         """
         return self._sigma
-
-    def suggested_bounds(self):
-        """ See :meth:`ToyLogPDF.suggested_bounds()`. """
-        # in higher dimensions reduce volume as otherwise gets too wide
-        r0_magnitude = (self._r0 + self._sigma) * (
-            5**(1.0 / (self._n_parameters - 1.0))
-        )
-        bounds = np.tile([-r0_magnitude, r0_magnitude],
-                         (self._n_parameters, 1))
-        return np.transpose(bounds).tolist()
 
     def var_normed(self):
         """

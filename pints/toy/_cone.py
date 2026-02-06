@@ -71,8 +71,7 @@ class ConeLogPDF(ToyLogPDF):
     def distance(self, samples):
         """
         Calculates a measure of normed distance of samples from exact mean and
-        covariance matrix assuming uniform prior with bounds given by
-        :meth:`suggested_bounds()`.
+        covariance matrix.
 
         See :meth:`pints.toy.ToyLogPDF.distance()`.
         """
@@ -136,12 +135,6 @@ class ConeLogPDF(ToyLogPDF):
         lambda_x = np.sqrt(np.sum(X_norm**2, axis=1))
         x_unit = [r[i] * X_norm[i] / y for i, y in enumerate(lambda_x)]
         return np.array(x_unit)
-
-    def suggested_bounds(self):
-        """ See :meth:`ToyLogPDF.suggested_bounds()`. """
-        magnitude = 1000
-        bounds = np.tile([-magnitude, magnitude], (self._n_parameters, 1))
-        return np.transpose(bounds).tolist()
 
     def var_normed(self):
         """
