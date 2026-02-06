@@ -6,13 +6,15 @@
 [![binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/pints-team/pints/main?filepath=examples)
 [![readthedocs](https://readthedocs.org/projects/pints/badge/?version=latest)](http://pints.readthedocs.io/en/latest/?badge=latest)
 
+
 # What is Pints?
 
 PINTS (Probabilistic Inference on Noisy Time-Series) is a framework for optimisation and Bayesian inference.
 Although it can be used as a general-purpose inference tool, it was developed specifically for models of noisy time-series, such as arise in electrochemistry and cardiac electrophysiology.
 
-PINTS is described in [this publication in JORS](http://doi.org/10.5334/jors.252), and can be cited using the information given in our [CITATION file](https://github.com/pints-team/pints/blob/main/CITATION).
+PINTS is described in [this publication in JORS](http://doi.org/10.5334/jors.252) and can be cited using the information given in our [CITATION file](https://github.com/pints-team/pints/blob/main/CITATION).
 More information about PINTS papers can be found in the [papers directory](https://github.com/pints-team/pints/tree/main/papers).
+
 
 ## Using PINTS
 
@@ -30,7 +32,9 @@ Experimental data sets in PINTS are defined simply as lists (or arrays) of `time
 If you have this kind of data, and if [your model (or model wrapper)](https://github.com/pints-team/pints/blob/main/examples/stats/custom-model.ipynb) implements the two methods above, then you are ready to start using PINTS to infer parameter values using [optimisation](https://github.com/pints-team/pints/blob/main/examples/optimisation/first-example.ipynb) or [sampling](https://github.com/pints-team/pints/blob/main/examples/sampling/first-example.ipynb).
 
 A brief example is shown below:
+
 ![An example of using PINTS in an optimisation](https://raw.githubusercontent.com/pints-team/pints/main/example.svg)
+
 _(Left)_ A noisy experimental time series and a computational forward model.
 _(Right)_ Example code for an optimisation problem.
 The full code can be [viewed here](https://github.com/pints-team/pints/blob/main/examples/sampling/readme-example.ipynb) but a friendlier, more elaborate, introduction can be found on the [examples page](https://github.com/pints-team/pints/blob/main/examples/README.md).
@@ -38,6 +42,7 @@ The full code can be [viewed here](https://github.com/pints-team/pints/blob/main
 Beyond time-series models, PINTS can be used on any error function or log-likelihood that takes real-valued, continuous parameters.
 
 An overview of the methods provided by PINTS can be [viewed here](https://pints.readthedocs.io/en/latest/#provided-methods).
+
 
 ### Examples and documentation
 
@@ -47,7 +52,7 @@ In addition, there is a [full API documentation](http://pints.readthedocs.io/en/
 
 ## Installing PINTS
 
-The latest release of PINTS can be installed without downloading (cloning) the git repository, by opening a console and typing
+The latest release of PINTS can be installed with `pip`, by opening a console and typing
 
 ```
 $ pip install --upgrade pip
@@ -78,19 +83,20 @@ To see what's changed in the latest release, see the [CHANGELOG](https://github.
 
 ## Contributing to PINTS
 
-There are lots of ways to contribute to PINTS development, and anyone is free to join in!
+There are lots of ways to contribute to PINTS development, and anyone is free to join in.
 For example, you can report problems or make feature requests on the [issues](https://github.com/pints-team/pints/issues) pages.
 
 Similarly, if you want to contribute documentation or code you can tell us your idea on this page, and then provide a pull request for review.
 Because PINTS is a big project, we've written extensive [contribution guidelines](https://github.com/pints-team/pints/blob/master/CONTRIBUTING.md) to help standardise the code — but don't worry, this will become clear during review.
 
+
 ## License
 
-PINTS is fully open source. For more information about its license, see [LICENSE](https://github.com/pints-team/pints/blob/main/LICENSE.md).
+PINTS is fully open source. 
+For more information about its license, see [LICENSE](https://github.com/pints-team/pints/blob/main/LICENSE.md).
 
 
 ## Get in touch
 
-Questions, suggestions, or bug reports? [Open an issue](https://github.com/pints-team/pints/issues) and let us know.
-
-Alternatively, feel free to email us at `pints at maillist.ox.ac.uk`.
+Questions, suggestions, or bug reports? 
+[Start a discussion](https://github.com/pints-team/pints/discussions) or [open an issue](https://github.com/pints-team/pints/issues) to let us know!
