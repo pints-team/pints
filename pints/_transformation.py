@@ -1239,19 +1239,19 @@ class TransformedLogLikelihood(pints.LogLikelihood):
     search space.
 
     Unlike a :class:`TransformedLogPDF`, a likelihood (a measure of how well
-    the data, $\boldsymbol{x}, is explained by a model, given fixed parameters) 
-    is invariant to a parameter transform (but not to a data transform), 
-    and so no Jacobian term appears. Instead for some :class:`Transformation` 
+    the data, $\boldsymbol{x}, is explained by a model, given fixed parameters)
+    is invariant to a parameter transform (but not to a data transform),
+    and so no Jacobian term appears. Instead for some :class:`Transformation`
     $\boldsymbol{q}=\boldsymbol{f}(\boldsymbol{p})$
 
     .. math::
-        $\underset{\boldsymbol{q}}{\text{max}}(\log L(\boldsymbol{q}|\boldsymbol{x})) = 
-        \underset{\boldsymbol{q}}{\text{max}}(\log L(\boldsymbol{f}^{-1}(\boldsymbol{q}|\boldsymbol{x}))).$
+        \underset{\boldsymbol{q}}{\text{max}}(\log L(\boldsymbol{q}|\boldsymbol{x})) =
+        \underset{\boldsymbol{q}}{\text{max}}(\log L(\boldsymbol{f}^{-1}(\boldsymbol{q}|\boldsymbol{x}))).
 
     For the first order sensitivity, the transformation is done using
 
     .. math::
-        \frac{\partial \log L(\boldsymbol{q}|\boldsymbol{x})}{\partial q_i} &= 
+        \frac{\partial \log L(\boldsymbol{q}|\boldsymbol{x})}{\partial q_i} &=
         \frac{\partial \log L(\boldsymbol{f}^{-1}(\boldsymbol{q})|\boldsymbol{x})}{\partial q_i}\\
         &= \sum_l \frac{\partial \log L(\boldsymbol{p|\boldsymbol{x}})}{\partial p_l}
         \frac{\partial p_l}{\partial q_i}.
