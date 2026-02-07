@@ -1238,18 +1238,23 @@ class TransformedLogLikelihood(pints.LogLikelihood):
     A :class:`pints.LogLikelihood` that accepts parameters in a transformed
     search space.
 
-    Unlike a :class:`TransformedLogPDF`, a likelihood (a probability of the
-    data, given fixed parameters) is invariant to a parameter transform (but
-    not to a data transform), and so no Jacobian term appears. Instead
+    Unlike a :class:`TransformedLogPDF`, a likelihood (a measure of how well
+    the data, $\boldsymbol{x}, is explained by a model, given fixed parameters) 
+    is invariant to a parameter transform (but not to a data transform), 
+    and so no Jacobian term appears. Instead for some :class:`Transformation` 
+    $\boldsymbol{q}=\boldsymbol{f}(\boldsymbol{p})$
 
     .. math::
-        ???
-
+        $\underset{\boldsymbol{q}}{\text{max}}(\log L(\boldsymbol{q}|\boldsymbol{x})) = 
+        \underset{\boldsymbol{q}}{\text{max}}(\log L(\boldsymbol{f}^{-1}(\boldsymbol{q}|\boldsymbol{x}))).$
 
     For the first order sensitivity, the transformation is done using
 
     .. math::
-        ???
+        \frac{\partial \log L(\boldsymbol{q}|\boldsymbol{x})}{\partial q_i} &= 
+        \frac{\partial \log L(\boldsymbol{f}^{-1}(\boldsymbol{q})|\boldsymbol{x})}{\partial q_i}\\
+        &= \sum_l \frac{\partial \log L(\boldsymbol{p|\boldsymbol{x}})}{\partial p_l}
+        \frac{\partial p_l}{\partial q_i}.
 
     Extends :class:`pints.LogLikelihood`.
 
@@ -1275,8 +1280,11 @@ class TransformedLogLikelihood(pints.LogLikelihood):
     def evaluateS1(self, q):
         """ See :meth:`LogPDF.evaluateS1()`. """
 
+        # Get parameters in the model space
+        p = self._transform.to_model(q)
+
         # Call evaluateS1 of LogLikelihood in the model space
-        logl, dlogl_nojac = self._error.evaluateS1(self._transform.to_model(q))
+        logl, dlogl_nojac = self._log_likelihood.evaluateS1(p)
 
         # Calculate the S1 using change of variable (see ErrorMeasure above)
         jacobian = self._transform.jacobian(q)
