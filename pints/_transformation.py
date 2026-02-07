@@ -32,25 +32,46 @@ class Transformation():
     """
     def convert_log_pdf(self, log_pdf):
         """
-        Returns a transformed log-PDF class.
+        Returns a transformed :class:`pints.LogPDF`.
+
+        If `log_pdf` is a :class:`LogPrior`, a :class:`TransformedLogPrior`
+        will be returned, which also transforms the output of the
+        :meth:`sample` method.
+
+        If `log_pdf` is a :class:`LogLikelihood`, a
+        :class:`TransformedLogLikelihood` is returned, which is assumed to be
+        invariant with respect to the transform (because it is a probability of
+        the data, not the parameters). For all other types (including
+        ``LogPrior``) a non-invariant transform is used, see
+        :class:`TransformedLogPDF` for details.
         """
+        if isinstance(log_pdf, pints.LogLikelihood):
+            return TransformedLogLikelihood(log_pdf, self)
+        if isinstance(log_pdf, pints.LogPrior):
+            return TransformedLogPrior(log_pdf, self)
         return TransformedLogPDF(log_pdf, self)
 
     def convert_log_prior(self, log_prior):
         """
-        Returns a transformed log-prior class.
+        Deprecated function: Use :meth:`convert_log_pdf` instead.
         """
+        # Deprecated on 2026-02-06
+        import warnings
+        warnings.warn(
+            'The method `convert_log_prior` is deprecated. Please use'
+            ' `convert_log_pdf` instead (which will automatically detect'
+            ' detect LogPDF subtypes).')
         return TransformedLogPrior(log_prior, self)
 
     def convert_error_measure(self, error_measure):
         """
-        Returns a transformed error measure class.
+        Returns a transformed :class:`pints.ErrorMeasure`.
         """
         return TransformedErrorMeasure(error_measure, self)
 
     def convert_boundaries(self, boundaries):
         """
-        Returns a transformed boundaries class.
+        Returns a transformed :class:`pints.Boundaries` object.
         """
         if isinstance(boundaries, pints.RectangularBoundaries):
             if self.elementwise():
@@ -1210,6 +1231,70 @@ class TransformedLogPrior(TransformedLogPDF, pints.LogPrior):
         for i, p in enumerate(ps):
             qs[i, :] = self._transform.to_search(p)
         return qs
+
+
+class TransformedLogLikelihood(pints.LogLikelihood):
+    r"""
+    A :class:`pints.LogLikelihood` that accepts parameters in a transformed
+    search space.
+
+    Unlike a :class:`TransformedLogPDF`, a likelihood (a measure of how well
+    the data, $\boldsymbol{x}, is explained by a model, given fixed parameters)
+    is invariant to a parameter transform (but not to a data transform),
+    and so no Jacobian term appears. Instead for some :class:`Transformation`
+    :math:`\boldsymbol{q}=\boldsymbol{f}(\boldsymbol{p})`
+
+    .. math::
+        \underset{\boldsymbol{q}}{\text{max}}(\log L(\boldsymbol{q}|\boldsymbol{x})) =
+        \underset{\boldsymbol{q}}{\text{max}}(\log L(\boldsymbol{f}^{-1}(\boldsymbol{q}|\boldsymbol{x}))).
+
+    For the first order sensitivity, the transformation is done using
+
+    .. math::
+        \frac{\partial \log L(\boldsymbol{q}|\boldsymbol{x})}{\partial q_i} &=
+        \frac{\partial \log L(\boldsymbol{f}^{-1}(\boldsymbol{q})|\boldsymbol{x})}{\partial q_i}\\
+        &= \sum_l \frac{\partial \log L(\boldsymbol{p|\boldsymbol{x}})}{\partial p_l}
+        \frac{\partial p_l}{\partial q_i}.
+
+    Extends :class:`pints.LogLikelihood`.
+
+    Parameters
+    ----------
+    log_likelihood
+        A :class:`pints.LogLikelihood`.
+    transformation
+        A :class:`pints.Transformation`.
+    """
+    def __init__(self, log_likelihood, transformation):
+        self._log_likelihood = log_likelihood
+        self._transform = transformation
+        self._n_parameters = self._log_pdf.n_parameters()
+        if self._transform.n_parameters() != self._n_parameters:
+            raise ValueError('Number of parameters for log_likelihood and '
+                             'transformation must match.')
+
+    def __call__(self, q):
+        # Compute LogLikelihood in the model space
+        return self._log_likelihood(self._transform.to_model(q))
+
+    def evaluateS1(self, q):
+        """ See :meth:`LogPDF.evaluateS1()`. """
+
+        # Get parameters in the model space
+        p = self._transform.to_model(q)
+
+        # Call evaluateS1 of LogLikelihood in the model space
+        logl, dlogl_nojac = self._log_likelihood.evaluateS1(p)
+
+        # Calculate the S1 using change of variable (see ErrorMeasure above)
+        jacobian = self._transform.jacobian(q)
+        dlogl = np.matmul(dlogl_nojac, jacobian)  # Jacobian must be 2nd term
+
+        return logl, dlogl
+
+    def n_parameters(self):
+        """ See :meth:`LogPDF.n_parameters()`. """
+        return self._n_parameters
 
 
 class UnitCubeTransformation(ScalingTransformation):
