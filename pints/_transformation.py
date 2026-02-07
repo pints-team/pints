@@ -1242,7 +1242,7 @@ class TransformedLogLikelihood(pints.LogLikelihood):
     the data, $\boldsymbol{x}, is explained by a model, given fixed parameters)
     is invariant to a parameter transform (but not to a data transform),
     and so no Jacobian term appears. Instead for some :class:`Transformation`
-    $\boldsymbol{q}=\boldsymbol{f}(\boldsymbol{p})$
+    :math:`\boldsymbol{q}=\boldsymbol{f}(\boldsymbol{p})`
 
     .. math::
         \underset{\boldsymbol{q}}{\text{max}}(\log L(\boldsymbol{q}|\boldsymbol{x})) =
