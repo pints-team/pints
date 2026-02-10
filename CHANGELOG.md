@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 ### Removed
 - [#1731](https://github.com/pints-team/pints/pull/1731) The method `ToyLogPDF.suggested_bounds()` and its implementations have been removed.
 ### Fixed
+- [#1729](https://github.com/pints-team/pints/pull/1729) The `rhat` method now raises an error if only 1 chain is passed in.
 - [#1713](https://github.com/pints-team/pints/pull/1713) Fixed Numpy 2.4.1 compatibility issues.
 - [#1690](https://github.com/pints-team/pints/pull/1690) Fixed bug in optimisation controller if population size left at `None`.
 

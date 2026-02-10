@@ -201,28 +201,28 @@ def rhat(chains, warm_up=0.0):
     """
     if not (chains.ndim == 2 or chains.ndim == 3):
         raise ValueError(
-            'Dimension of chains is %d. ' % chains.ndim
-            + 'Method computes Rhat for one '
-            'or multiple parameters and therefore only accepts 2 or 3 '
-            'dimensional arrays.')
+            f'Dimension of chains is {chains.ndim}. This method computes Rhat'
+            ' for one or multiple parameters and therefore only accepts 2 or 3'
+            ' dimensional arrays.')
     if warm_up > 1 or warm_up < 0:
         raise ValueError(
-            '`warm_up` is set to %f. `warm_up` only takes values in [0,1].' %
-            warm_up)
+            f'`warm_up` is set to {warm_up}. `warm_up` only takes values in'
+            ' [0,1].')
+    if chains.shape[0] < 2:
+        raise ValueError('Number of chains needs to be 2 or higher')
 
     # Get number of samples
     n = chains.shape[1]
+    if n < 2:
+        raise ValueError(
+            'Number of samples per chain after warm-up and chain splitting is '
+            f'{n}. Method needs at least 2 samples per chain.')
 
     # Exclude warm-up
     chains = chains[:, int(n * warm_up):]
-    n = chains.shape[1]
 
     # Split chains in half
     n = n // 2  # new length of chains
-    if n < 1:
-        raise ValueError(
-            'Number of samples per chain after warm-up and chain splitting is '
-            '%d. Method needs at least 1 sample per chain.' % n)
     chains = np.vstack([chains[:, :n], chains[:, -n:]])
 
     # Compute mean within-chain variance
