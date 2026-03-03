@@ -1245,16 +1245,20 @@ class TransformedLogLikelihood(pints.LogLikelihood):
     :math:`\boldsymbol{q}=\boldsymbol{f}(\boldsymbol{p})`
 
     .. math::
-        \underset{\boldsymbol{q}}{\text{max}}(\log L(\boldsymbol{q}|\boldsymbol{x})) =
-        \underset{\boldsymbol{q}}{\text{max}}(\log L(\boldsymbol{f}^{-1}(\boldsymbol{q}|\boldsymbol{x}))).
+        \underset{\boldsymbol{q}}{\text{max}}(
+            \log L(\boldsymbol{q}|\boldsymbol{x})) =
+        \underset{\boldsymbol{q}}{\text{max}}(
+            \log L(\boldsymbol{f}^{-1}(\boldsymbol{q}|\boldsymbol{x}))).
 
     For the first order sensitivity, the transformation is done using
 
     .. math::
         \frac{\partial \log L(\boldsymbol{q}|\boldsymbol{x})}{\partial q_i} &=
-        \frac{\partial \log L(\boldsymbol{f}^{-1}(\boldsymbol{q})|\boldsymbol{x})}{\partial q_i}\\
-        &= \sum_l \frac{\partial \log L(\boldsymbol{p|\boldsymbol{x}})}{\partial p_l}
-        \frac{\partial p_l}{\partial q_i}.
+        \frac{\partial \log L(\boldsymbol{f}^{-1}(\boldsymbol{q})
+                              | \boldsymbol{x})}{\partial q_i} \\
+        &= \sum_l \frac{
+            \partial \log L(\boldsymbol{p|\boldsymbol{x}})}{\partial p_l}
+            \frac{\partial p_l}{\partial q_i}.
 
     Extends :class:`pints.LogLikelihood`.
 
@@ -1268,7 +1272,7 @@ class TransformedLogLikelihood(pints.LogLikelihood):
     def __init__(self, log_likelihood, transformation):
         self._log_likelihood = log_likelihood
         self._transform = transformation
-        self._n_parameters = self._log_pdf.n_parameters()
+        self._n_parameters = self._log_likelihood.n_parameters()
         if self._transform.n_parameters() != self._n_parameters:
             raise ValueError('Number of parameters for log_likelihood and '
                              'transformation must match.')

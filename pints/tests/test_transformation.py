@@ -931,6 +931,7 @@ class TestTransformedWrappers(unittest.TestCase):
         j = np.diag(x)
         log_j_det = -2.9857819427008230
         tr = t.convert_log_pdf(r)
+        self.assertIsInstance(tr, pints.TransformedLogPDF)
 
         # Test before and after transformed give the same result
         self.assertAlmostEqual(tr(tx), r(x) + log_j_det)
@@ -973,6 +974,38 @@ class TestTransformedWrappers(unittest.TestCase):
         self.assertEqual(len(w), 1)
         self.assertIn('deprecated', str(w[0].message))
         self.assertIsInstance(tr, pints.TransformedLogPrior)
+
+    def test_transformed_log_likelihood(self):
+        # Test TransformedLogLikelihood class
+
+        class Fakelihood(pints.toy.TwistedGaussianLogPDF, pints.LogLikelihood):
+            pass
+
+        t = pints.LogTransformation(2)
+        r = Fakelihood(2, 0.01)
+        self.assertIsInstance(r, pints.LogLikelihood)
+
+        x = [0.05, 1.01]
+        tx = [-2.9957322735539909, 0.0099503308531681]
+        j = np.diag(x)
+        tr = t.convert_log_pdf(r)
+        self.assertIsInstance(tr, pints.TransformedLogLikelihood)
+        self.assertEqual(tr.n_parameters(), r.n_parameters())
+
+        # Test before and after transformed give the same result
+        self.assertAlmostEqual(tr(tx), r(x))
+
+        # Test evaluateS1()
+        rx, s1 = r.evaluateS1(x)
+        trtx, trts1 = tr.evaluateS1(tx)
+        self.assertTrue(np.allclose(trtx, rx))
+        ts1 = np.matmul(s1, j)
+        self.assertTrue(np.allclose(trts1, ts1))
+
+        # Test wrong number of parameters
+        self.assertRaisesRegex(
+            ValueError, 'Number of parameters',
+            pints.TransformedLogLikelihood, r, pints.LogTransformation(3))
 
 
 if __name__ == '__main__':
