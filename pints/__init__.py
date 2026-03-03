@@ -275,6 +275,7 @@ from ._transformation import (
     Transformation,
     TransformedBoundaries,
     TransformedErrorMeasure,
+    TransformedLogLikelihood,
     TransformedLogPDF,
     TransformedLogPrior,
     TransformedRectangularBoundaries,
