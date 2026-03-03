@@ -21,8 +21,7 @@ class TestToyODEModel(unittest.TestCase):
         model = pints.toy.Hes1Model()
         vals = [1, 2, 3]
         model.set_initial_conditions(vals)
-        self.assertTrue(np.array_equal(model.initial_conditions(),
-                                       vals))
+        self.assertTrue(np.array_equal(model.initial_conditions(), vals))
 
 
 if __name__ == '__main__':

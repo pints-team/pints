@@ -30,12 +30,6 @@ class ToyLogPDF(pints.LogPDF):
         """
         raise NotImplementedError
 
-    def suggested_bounds(self):
-        """
-        Returns suggested boundaries for prior.
-        """
-        raise NotImplementedError
-
 
 class ToyModel():
     """

@@ -121,8 +121,3 @@ class GermanCreditLogPDF(ToyLogPDF):
     def n_parameters(self):
         return self._n_parameters
 
-    def suggested_bounds(self):
-        """ See :meth:`ToyLogPDF.suggested_bounds()`. """
-        magnitude = 100
-        bounds = np.tile([-magnitude, magnitude], (self._n_parameters, 1))
-        return np.transpose(bounds).tolist()

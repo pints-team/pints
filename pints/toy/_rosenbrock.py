@@ -59,7 +59,6 @@ class RosenbrockLogPDF(ToyLogPDF):
     def __init__(self):
         self._f = RosenbrockError()
 
-        # assumes uniform prior with bounds given by suggested_bounds
         self._true_mean = np.array([0.8693578490590254, 2.599780856590108])
         self._true_cov = np.array([[1.805379677045191, 2.702575590274159],
                                    [2.702575590274159, 8.526583078612177]])
@@ -70,8 +69,7 @@ class RosenbrockLogPDF(ToyLogPDF):
     def distance(self, samples):
         """
         Calculates a measure of normed distance of samples from exact mean and
-        covariance matrix assuming uniform prior with bounds given
-        by :meth:`suggested_bounds()`.
+        covariance matrix.
 
         See :meth:`pints.toy.ToyLogPDF.distance()`.
         """
@@ -118,8 +116,3 @@ class RosenbrockLogPDF(ToyLogPDF):
         """
         return self._f.optimum()
 
-    def suggested_bounds(self):
-        """ See :meth:`pints.toy.ToyLogPDF.suggested_bounds()`. """
-        # think the following hard bounds are ok
-        bounds = [[-2, 4], [-1, 12]]
-        return np.transpose(bounds).tolist()

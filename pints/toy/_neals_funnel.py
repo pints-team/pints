@@ -126,13 +126,6 @@ class NealsFunnelLogPDF(ToyLogPDF):
             samples[i, n - 1] = nu
         return samples
 
-    def suggested_bounds(self):
-        """ See :meth:`pints.toy.ToyLogPDF.suggested_bounds()`. """
-        magnitude = 30
-        bounds = np.tile([-magnitude, magnitude],
-                         (self._n_parameters, 1))
-        return np.transpose(bounds).tolist()
-
     def var(self):
         """
         Returns the variance of the target distribution in each dimension.

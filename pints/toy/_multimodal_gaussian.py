@@ -201,13 +201,3 @@ class MultimodalGaussianLogPDF(ToyLogPDF):
             samples[i, :] = self._vars[rand_mode].rvs(1)
         return samples
 
-    def suggested_bounds(self):
-        """ See :meth:`pints.toy.ToyLogPDF.suggested_bounds()`. """
-        # make rectangular bounds in each dimension 3X width of range
-        a_max = np.max(self._modes)
-        a_min = np.min(self._modes)
-        a_range = a_max - a_min
-        lower = a_min - a_range
-        upper = a_max + a_range
-        bounds = np.tile([lower, upper], (self._n_parameters, 1))
-        return np.transpose(bounds).tolist()

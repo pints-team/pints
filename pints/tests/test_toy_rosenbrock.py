@@ -50,12 +50,7 @@ class TestRosenbrock(unittest.TestCase):
         self.assertEqual(dl[0], float(-6004.0 / 2505.0))
         self.assertEqual(dl[1], float(200.0 / 501.0))
 
-        # suggested bounds and distance measure
-        bounds = f.suggested_bounds()
-        bounds = [[-2, 4], [-1, 12]]
-        bounds = np.transpose(bounds).tolist()
-        self.assertTrue(np.array_equal(bounds, f.suggested_bounds()))
-
+        # Distance measure
         x = np.ones((100, 3))
         self.assertRaises(ValueError, f.distance, x)
         x = np.ones((100, 3, 2))

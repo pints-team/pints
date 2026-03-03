@@ -70,9 +70,8 @@ class TestSimpleEggBoxLogPDF(unittest.TestCase):
         x = np.ones((n, 2, 2))
         self.assertRaises(ValueError, log_pdf1.kl_divergence, x)
 
-    def test_sensitivity_bounds_distance(self):
+    def test_sensitivity_and_distance(self):
         # Tests :meth:`SimpleEggBoxLogPDF.evaluateS1()`,
-        # :meth:`SimpleEggBoxLogPDF.suggested_bounds()` and
         # :meth:`SimpleEggBoxLogPDF.distance()`
 
         f = pints.toy.SimpleEggBoxLogPDF()
@@ -81,8 +80,6 @@ class TestSimpleEggBoxLogPDF(unittest.TestCase):
         self.assertAlmostEqual(l, -13.781024134434123)
         self.assertAlmostEqual(dl[0], -1.5)
         self.assertAlmostEqual(dl[1], 2.9999991)
-        self.assertTrue(np.array_equal(f.suggested_bounds(),
-                                       [[-16.0, -16.0], [16.0, 16.0]]))
         samples = f.sample(100)
         self.assertTrue(f.kl_divergence(samples) > 0)
         self.assertEqual(f.kl_divergence(samples), f.distance(samples))
@@ -93,8 +90,6 @@ class TestSimpleEggBoxLogPDF(unittest.TestCase):
         self.assertAlmostEqual(l, -46.269777289511559)
         self.assertAlmostEqual(dl[0], -4.6662126879796366)
         self.assertAlmostEqual(dl[1], -2.6666666666666639)
-        self.assertTrue(np.array_equal(f.suggested_bounds(),
-                                       [[-30.0, -30.0], [30.0, 30.0]]))
         samples = f.sample(100)
         self.assertTrue(f.kl_divergence(samples) > 0)
         self.assertEqual(f.kl_divergence(samples), f.distance(samples))

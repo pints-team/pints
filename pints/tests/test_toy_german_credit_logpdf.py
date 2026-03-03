@@ -71,11 +71,8 @@ class TestGermanCreditLogPDF(unittest.TestCase):
         self.assertAlmostEqual(dp[1], -160.7785147438439, places=6)
 
     def test_givens(self):
-        # tests whether boundaries are correct and n_parameters
+        # tests n_parameters
         self.assertEqual(25, self.model.n_parameters())
-        borders = self.model.suggested_bounds()
-        self.assertEqual(borders[0][0], -100)
-        self.assertEqual(borders[1][0], 100)
 
 
 if __name__ == '__main__':

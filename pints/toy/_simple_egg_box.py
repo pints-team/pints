@@ -157,8 +157,3 @@ class SimpleEggBoxLogPDF(ToyLogPDF):
         np.random.shuffle(x)
         return x
 
-    def suggested_bounds(self):
-        """ See :meth:`ToyLogPDF.suggested_bounds()`. """
-        magnitude = self._r * self._sigma * 2
-        bounds = np.tile([-magnitude, magnitude], (2, 1))
-        return np.transpose(bounds).tolist()
