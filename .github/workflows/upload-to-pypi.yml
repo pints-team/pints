@@ -1,21 +1,28 @@
-name: Upload to PyPi
+name: Build release distributions
 
 on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
   release:
     types:
       - published
+  workflow_dispatch:
 
 jobs:
 
-  upload-to-pypi:
-    name: Upload to Pypi
+  build-dist:
+    name: Build distribution files
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.14'
 
@@ -23,14 +30,33 @@ jobs:
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install --upgrade twine
+          python -m pip install --upgrade build
 
       - name: create release binaries
         run: |
-          python setup.py sdist bdist_wheel
+          python -m build
 
-      - name: publish to PyPI
-        uses: pypa/gh-action-pypi-publish@master
+      - uses: actions/upload-artifact@v7
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
+          name: dist-files
+          path: ./dist/*
+
+
+  upload_to_pypi:
+    name: Upload to PyPI
+    needs: [build-dist]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # this permission is mandatory for trusted publishing
+    if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+
+    steps:
+      - name: Download wheels from cloud runners
+        uses: actions/download-artifact@v8
+        with:
+          name: dist-files
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@v1.13.0
+        with:
+          packages_dir: dist/
