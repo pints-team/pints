@@ -3,7 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 
-## Unreleased
+## [0.6.0] - 2026-03-05
+
 ### Added
 - [#1730](https://github.com/pints-team/pints/pull/1730) Added a `TransformedLogLikelihood` class which, unlike generic `TransformedLogPDF` objects, is invariant with respect to the parameters.
 - [#1724](https://github.com/pints-team/pints/pull/1724) The `LogLikelihood` class has been reintroduced, to differentiate between probabilities of parameters and probabilities of data, given fixed parameters.
