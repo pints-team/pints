@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write  # this permission is mandatory for trusted publishing
-    # if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
+    if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
 
     steps:
       - name: Download wheels from cloud runners
@@ -56,13 +56,7 @@ jobs:
         with:
           name: dist-files
           path: dist
-      
-      - name: check...
-        run: |
-          ls -la
-          cd dist
-          ls -la
 
-      # - uses: pypa/gh-action-pypi-publish@v1.13.0
-      #   with:
-      #     packages_dir: dist/
+      - uses: pypa/gh-action-pypi-publish@v1.13.0
+        with:
+          packages_dir: dist/
