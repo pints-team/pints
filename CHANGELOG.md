@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file.
 
 
+## Unreleased
+
+### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+
+
 ## [0.6.0] - 2026-03-05
 
 ### Added
