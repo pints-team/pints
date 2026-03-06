@@ -82,6 +82,7 @@ setup(
         ],
         'stan': [
             'pystan>=3',
+            'setuptools<82',
         ]
     },
     python_requires='>=3.8',

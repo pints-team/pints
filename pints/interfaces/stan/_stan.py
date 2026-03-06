@@ -8,8 +8,9 @@
 import re
 import warnings
 
-import httpstan
 import numpy as np
+
+import httpstan
 import stan
 
 import pints
@@ -20,9 +21,9 @@ class StanLogPDF(pints.LogPDF):
     A :class:`pints.LogPDF` based on Stan code and data, which can be used in
     sampling and optimisation.
 
-    This class interfaces with Stan ([1]_) using PyStan ([2]_) and httpspan
-    ([3]_), which compiles the Stan model code. This can take some time
-    (typically minutes).
+    This class interfaces with Stan ([1]_) using ``stan`` ([2]_) and
+    ``httpspan`` ([3]_), which compiles the Stan model code. This can take some
+    time (typically minutes).
 
     Note that the interface assumes that the parameters are on the
     unconstrained scale (according to Stan's "constraint transforms" [1]_).
@@ -32,7 +33,7 @@ class StanLogPDF(pints.LogPDF):
     back to the constrained space (in the example, using an ``exp`` transform)
     to obtain appropriate samples.
 
-    Parameters are ordered as in the stan model. Vector and matrix parameters
+    Parameters are ordered as in the Stan model. Vector and matrix parameters
     are "flattened" into a sequence by Stan, use :meth:`StanLogPDF.names()` to
     see the result.
 
