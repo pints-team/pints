@@ -30,7 +30,7 @@ jobs:
             os: ubuntu-24.04
             extras: ".[stan]"
           - py: "3.10"
-            os: windows-11-arm
+            os: windows-2025
             extras: ""
           - py: "3.11"
             os: ubuntu-24.04-arm
@@ -42,7 +42,7 @@ jobs:
             os: ubuntu-24.04
             extras: ".[stan]"
           - py: "3.12"
-            os: windows-2025
+            os: windows-11-arm
             extras: ""
           - py: "3.13"
             os: ubuntu-24.04-arm
