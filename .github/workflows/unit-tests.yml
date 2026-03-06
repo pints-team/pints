@@ -32,9 +32,9 @@ jobs:
             os: windows-2025
           - py: "3.11"
             os: ubuntu-24.04-arm
-            extras: ".[stan]"
           - py: "3.11"
             os: macos-15
+            extras: ".[stan]"
           - py: "3.12"
             os: ubuntu-24.04
           - py: "3.12"
