@@ -15,16 +15,18 @@ import pints.toy
 from shared import SubCapture
 
 
+debug = False
+
+no_stan_msg = None
 try:
     from pints.interfaces.stan import StanLogPDF
     have_stan = True
-except ImportError:
+except ImportError as e:
     have_stan = False
+    no_stan_msg = f'PyStan not found: {e}'
 
-debug = False
 
-
-@unittest.skipIf(not have_stan, 'PyStan not found')
+@unittest.skipIf(not have_stan, no_stan_msg)
 class TestStanLogPDF(unittest.TestCase):
     """ Tests StanLogPDF. """
 
