@@ -25,40 +25,30 @@ jobs:
         include:
           - py: "3.9"
             os: ubuntu-22.04
-            extras: ""
           - py: "3.10"
             os: ubuntu-24.04
             extras: ".[stan]"
           - py: "3.10"
             os: windows-2025
-            extras: ""
           - py: "3.11"
             os: ubuntu-24.04-arm
             extras: ".[stan]"
           - py: "3.11"
             os: macos-15
-            extras: ""
           - py: "3.12"
             os: ubuntu-24.04
-            extras: ".[stan]"
           - py: "3.12"
             os: windows-11-arm
-            extras: ""
           - py: "3.13"
             os: ubuntu-24.04-arm
-            extras: ".[stan]"
           - py: "3.13"
             os: macos-26-intel
-            extras: ""
           - py: "3.14"
             os: ubuntu-24.04
-            extras: ".[stan]"
           - py: "3.14"
             os: macos-26
-            extras: ""
           - py: "3.15"
             os: ubuntu-24.04-arm
-            extras: ""
 
     steps:
       - uses: actions/checkout@v6
@@ -73,7 +63,7 @@ jobs:
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install . ${{ matrix.extras }}
+          python -m pip install . ${{ matrix.extras || '' }}
 
       - name: run unit tests
         run: |
