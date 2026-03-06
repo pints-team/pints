@@ -46,7 +46,6 @@ jobs:
           - py: "3.13"
             os: ubuntu-24.04-arm
             extras: ".[stan]"
-            extras: ""
           - py: "3.13"
             os: macos-26-intel
             extras: ""
