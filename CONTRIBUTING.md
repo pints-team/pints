@@ -337,19 +337,20 @@ A central version number is stored in `pints/version`.
 
 ### New releases on PyPI (for `pip`)
 
-Occasionally, we'll make a new release for PINTS, and update the version on PyPI (which is where `pip` will download it from, for non-dev users).
+Occasionally, we'll make a new release for PINTS, and update the version on PyPI (which is where `pip` downloads come from).
 
 To do this:
 
-- Decide a new release is necessary, discuss it in the group.
-- Make sure the version number has changed since the last release.
-- Use the [GitHub releases page](https://github.com/pints-team/pints/releases/new) to create a new release. Each release will create a tag in the git repository, which should have the format `v1.2.3`.
-    - The first number is for big events, the second for regular releases (e.g. new features), the final for bugfixes and smaller improvements. This is subjective.
-    - Beyond that, there is no significance to these numbers (e.g. it doesn't matter if they're odd or even, `v0.9.9` is followed by `v0.9.10`).
-- Check what has changed since the last release, and write some release notes to summarise what's new. This can be based on the [Changelog](#changelog).
-- Creating the new release in github **will automatically update PyPI**, so do this with care.
-  - Keep in mind that PyPI version numbers are eternal: You cannot modify a release, only create a new one with a new version number.
-- Once the new release is done, create a PR to update the version number (final digit) to indicate that the code in the repo is no longer the version on PIP.
+1. Decide a new release is necessary by discussing it in the group.
+2. Check that the version number (`pints/version`) has changed since the last release.
+3. Create and merge a branch updating the [Changelog](#changelog) with the new version number and date, and create a new "Unreleased" header with empty "Added", "Changed", "Deprecated", "Removed", "Fixed" sections.
+5. Use the [GitHub releases page](https://github.com/pints-team/pints/releases/new) to create a new release, and a new tag with the format `v1.2.3` - **don't forget the v**.
+   - The first number is for big events, the second for regular releases (e.g. new features), the final for bugfixes and smaller improvements. This is subjective.
+   - Beyond that, there is no significance to these numbers. It doesn't matter if they're odd or even. `v0.7.9` is followed by `v0.7.10`.
+6. Write release notes summarising the major changes, based on the Changelog.
+7. Finally, create the new release. **This will automatically update PyPI, so do this with care!**
+  - PyPI version numbers are eternal: Once created, a release cannot be modified.
+8. Once the new release is done, create a PR to update the version number (final digit) to indicate that the code in the repo is no longer the version on PyPI.
 
 
 ### Setuptools
