@@ -12,6 +12,12 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 
+## [0.6.1] - 2026-03-06
+
+### Changed
+- [#1734](https://github.com/pints-team/pints/pull/1734) Infrastructure only: migrated to PyPI trusted publishing for releases.
+
+
 ## [0.6.0] - 2026-03-05
 
 ### Added
