@@ -180,6 +180,7 @@ from ._optimisers import (
     Optimiser,
     PopulationBasedOptimiser,
 )
+from ._optimisers._adagrad import AdaGrad
 from ._optimisers._adam import Adam
 from ._optimisers._cmaes import CMAES
 from ._optimisers._cmaes_bare import BareCMAES
