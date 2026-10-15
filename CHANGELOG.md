@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Deprecated
 ### Removed
 ### Fixed
+- [#1746](https://github.com/pints-team/pints/pull/1746) Corrected the function signature in the docstring for `OptimisationController.set_callback`.
 
 
 ## [0.6.1] - 2026-03-06
