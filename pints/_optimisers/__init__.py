@@ -882,15 +882,18 @@ class OptimisationController():
         Allows a "callback" function to be passed in that will be called at the
         end of every iteration.
 
-        This can be used for e.g. visualising optimiser progress.
+        This can be used to provide feedback on progress, but also, for
+        example, to make detailed study of an optimiser's behaviour.
 
         Example::
 
-            def cb(opt):
-                plot(opt.xbest())
+            def cb(iter, opt):
+                plot(f'Iteration {iter} is at {opt.xbest()}')
 
             opt.set_callback(cb)
 
+        Here, ``iter`` is the current iteration count, and ``opt`` is the
+        optimiser used by the controller (as returned by :meth:`optimiser()`).
         """
         if cb is not None and not callable(cb):
             raise ValueError('The argument cb must be None or a callable.')
