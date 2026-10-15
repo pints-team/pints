@@ -897,6 +897,9 @@ class OptimisationController():
         ``iteration`` is an integer with the current iteration count, while
         ``optimiser`` is a :class:`Optimiser`. Note that in the example above,
         ``opt`` is a :class:`OptimisationController`.
+
+        Only one callback function can be set. To unset the callback use
+        ``set_callback(None)``.
         """
         if cb is not None and not callable(cb):
             raise ValueError('The argument cb must be None or a callable.')
