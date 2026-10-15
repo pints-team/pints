@@ -887,13 +887,16 @@ class OptimisationController():
 
         Example::
 
-            def cb(iter, opt):
-                plot(f'Iteration {iter} is at {opt.xbest()}')
+            def cb(iteration, optimiser):
+                plot(f'Iteration {iteration} is at {optimiser.xbest()}')
 
+            opt = pints.OptimisationController(...)
             opt.set_callback(cb)
 
-        Here, ``iter`` is the current iteration count, and ``opt`` is the
-        optimiser used by the controller (as returned by :meth:`optimiser()`).
+        The function signature is ``(iteration, optimiser)``, where
+        ``iteration`` is an integer with the current iteration count, while
+        ``optimiser`` is a :class:`Optimiser`. Note that in the example above,
+        ``opt`` is a :class:`OptimisationController`.
         """
         if cb is not None and not callable(cb):
             raise ValueError('The argument cb must be None or a callable.')
