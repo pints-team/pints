@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Deprecated
 ### Removed
 ### Fixed
+- Fixed censored Gaussian noise sensitivities when data values lie beyond the censoring limits.
 - [#1746](https://github.com/pints-team/pints/pull/1746) Corrected the function signature in the docstring for `OptimisationController.set_callback`.
 
 

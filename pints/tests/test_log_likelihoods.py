@@ -240,6 +240,54 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
             [1.1, 0.0, -5.5]])
         cls.sigma = 0.1
 
+    def test_evaluateS1_values_beyond_limits(self):
+        # Censored values contribute their threshold probability, regardless
+        # of how far beyond the threshold the recorded value lies.
+        times = np.array([0., 1., 2., 3.])
+        data = np.array([[-0.4, 0.4, -0.2], [0.6, 1.2, 0.5],
+                         [1.4, 1.8, 1.5], [2.2, 3.2, 2.5]])
+        for n_outputs in (1, 2, 3):
+            for lower, upper in ((None, None), (0.5, None),
+                                 (None, 1.6), (0.5, 1.6)):
+                with self.subTest(n_outputs=n_outputs,
+                                  lower=lower, upper=upper):
+                    model = pints.toy.ConstantModel(n_outputs)
+                    values = data[:, :n_outputs]
+                    clipped = np.clip(values,
+                                      -np.inf if lower is None else lower,
+                                      np.inf if upper is None else upper)
+                    if n_outputs == 1:
+                        problem = pints.SingleOutputProblem(
+                            model, times, values[:, 0])
+                        clipped_problem = pints.SingleOutputProblem(
+                            model, times, clipped[:, 0])
+                    else:
+                        problem = pints.MultiOutputProblem(
+                            model, times, values)
+                        clipped_problem = pints.MultiOutputProblem(
+                            model, times, clipped)
+                    likelihood = pints.CensoredGaussianLogLikelihood(
+                        problem, lower, upper)
+                    clipped_likelihood = pints.CensoredGaussianLogLikelihood(
+                        clipped_problem, lower, upper)
+                    parameters = np.r_[[0.7, 0.4, 0.3][:n_outputs],
+                                       [0.9, 1.1, 1.3][:n_outputs]]
+                    with np.errstate(divide='ignore', invalid='ignore'):
+                        score, gradient = likelihood.evaluateS1(parameters)
+                        clipped_score, clipped_gradient = (
+                            clipped_likelihood.evaluateS1(parameters))
+                        self.assertEqual(score, clipped_score)
+                        np.testing.assert_allclose(gradient, clipped_gradient)
+                        expected = np.empty_like(parameters)
+                        for j in range(len(parameters)):
+                            step = np.zeros_like(parameters)
+                            step[j] = 1e-5
+                            expected[j] = (likelihood(parameters + step)
+                                           - likelihood(parameters - step)
+                                           ) / (2 * step[j])
+                    np.testing.assert_allclose(gradient, expected,
+                                               rtol=1e-5, atol=1e-5)
+
     def test_call_list_none_censored(self):
         values = self.data_single.tolist()
         problem = pints.SingleOutputProblem(

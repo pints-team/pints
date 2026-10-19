@@ -508,13 +508,13 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
 
         # Calculate derivative wrt sigma
         lower_dsigma_inner_val = (lower_pdf.T *
-                                  (self._values - y).T) / (lower_cdf.T)
+                                  (self._a - y).T) / (lower_cdf.T)
         lower_censored_dsigma = - sigma**(-2) *\
             np.sum(lower_dsigma_inner_val.T,
                    where=self._lower_condition, axis=0).T
 
         upper_dsigma_inner_val = (upper_pdf.T *
-                                  (self._values - y).T) / (1 - upper_cdf.T)
+                                  (self._b - y).T) / (1 - upper_cdf.T)
         upper_censored_dsigma = sigma**(-2) *\
             np.sum(upper_dsigma_inner_val.T,
                    where=self._upper_condition, axis=0).T
@@ -1813,4 +1813,3 @@ class UnknownNoiseLogLikelihood(GaussianLogLikelihood):
             'The class `pints.UnknownNoiseLogLikelihood` is deprecated.'
             ' Please use `pints.GaussianLogLikelihood` instead.')
         super().__init__(problem)
-
