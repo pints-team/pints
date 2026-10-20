@@ -40,7 +40,7 @@ jobs:
           python -m pip install .
 
       - name: install stan
-        if: ${{ matrix.python-version >= '3.12' }}
+        if: ${{ matrix.python-version == '3.12' || matrix.python-version >= '3.14' }}
         run : python -m pip install .[stan]
 
       - name: run unit tests

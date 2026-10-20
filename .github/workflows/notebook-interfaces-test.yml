@@ -18,7 +18,7 @@ jobs:
         uses: actions/setup-python@v7
         with:
           # Testing on version that Stan currently supports
-          python-version: '3.15'
+          python-version: '3.14'
 
       # We use e.g. install pints[stan] to install dependencies for interfaces
       # that have some code in pints/interfaces. Dependencies that are not used
