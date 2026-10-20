@@ -45,9 +45,13 @@ You now have everything you need to start making changes!
 13. Update `CHANGELOG.md`, following the guidelines in the [changelog](#changelog) section.
 14. Once a PR has been created, it will be reviewed by any member of the community. Changes might be suggested which you can make by simply adding new commits to the branch. When everything's finished, someone with the right GitHub permissions will merge your changes into PINTS main repository.
 
-Finally, if you really, really, _really_ love developing PINTS, have a look at the current [project infrastructure](#infrastructure).
+### D. LLM Usage
 
+Please keep all communication, on issues, PRs or otherwise, strictly human.
+Large swathes of code or text posted to the repository without following the above process will be deleted if AI generation is suspected.
 
+You can use LLM chatbots or agents to write code and prepare PRs, but remain responsible for all code submitted to this repository.
+It is expected that you have reviewed and fully understand the submitted work and the parts of PINTS you are adding to or changing, and that you have cited relevant literature where appropriate.
 
 ## Installation
 
