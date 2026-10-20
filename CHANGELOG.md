@@ -7,8 +7,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 ### Changed
-- [#1699](https://github.com/pints-team/pints/pull/1699) PINTS is no longer tested on Python 3.9. Testing for Python 3.15 has been added.
-- [#1699](https://github.com/pints-team/pints/pull/1699) PINTS is no longer tested on Ubuntu 22.04. Testing on Ubuntu 26.04 has been added.
+- [#1750](https://github.com/pints-team/pints/pull/1750) PINTS is no longer tested on Python 3.9. Testing for Python 3.15 has been added.
+- [#1750](https://github.com/pints-team/pints/pull/1750) PINTS is no longer tested on Ubuntu 22.04. Testing on Ubuntu 26.04 has been added.
 ### Deprecated
 ### Removed
 ### Fixed
