@@ -439,29 +439,12 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
         # the most expensive step in inference, especially for ODE models
         output = self._problem.evaluate(theta)
 
-        # Make conditions for where data isn't censored and is lower/upper
-        # censored into 3D arrays
-
-        if self._values.ndim == 1:
-            where_condition = np.reshape(
-                self._not_censored_condition,
-                (np.shape(self._not_censored_condition)[0], 1, 1))
-            lower_where_condition = np.reshape(
-                self._lower_condition,
-                (np.shape(self._lower_condition)[0], 1, 1))
-            upper_where_condition = np.reshape(
-                self._upper_condition,
-                (np.shape(self._upper_condition)[0], 1, 1))
-        else:
-            where_condition = np.repeat(
-                self._not_censored_condition[:, :, np.newaxis],
-                np.shape(self._not_censored_condition)[-1], axis=2)
-            lower_where_condition = np.repeat(
-                self._lower_condition[:, :, np.newaxis],
-                np.shape(self._lower_condition)[-1], axis=2)
-            upper_where_condition = np.repeat(
-                self._upper_condition[:, :, np.newaxis],
-                np.shape(self._upper_condition)[-1], axis=2)
+        # Keep a singleton parameter axis so each output's mask applies
+        # to all model parameters, independently of the number of outputs.
+        condition_shape = (self._nt, self._no, 1)
+        where_condition = self._not_censored_condition.reshape(condition_shape)
+        lower_where_condition = self._lower_condition.reshape(condition_shape)
+        upper_where_condition = self._upper_condition.reshape(condition_shape)
 
         # 1. Parts of the derivative corresponding to the data that
         # isn't censored
@@ -497,14 +480,16 @@ class CensoredGaussianLogLikelihood(pints.ProblemLogLikelihood):
         lower_inner_val = (lower_numerator / lower_denominator).T
         lower_inner_sum = np.sum(lower_inner_val, where=lower_where_condition,
                                  axis=0)
-        lower_censored_dL = -np.sum((sigma**(-1) * lower_inner_sum).T, axis=0)
+        lower_censored_dL = -np.sum(
+            (sigma**(-1))[:, np.newaxis] * lower_inner_sum, axis=0)
 
         upper_numerator = upper_pdf.T * dy.T
         upper_denominator = 1 - upper_cdf.T
         upper_inner_val = (upper_numerator / upper_denominator).T
         upper_inner_sum = np.sum(upper_inner_val, where=upper_where_condition,
                                  axis=0)
-        upper_censored_dL = np.sum((sigma**(-1) * upper_inner_sum).T, axis=0)
+        upper_censored_dL = np.sum(
+            (sigma**(-1))[:, np.newaxis] * upper_inner_sum, axis=0)
 
         # Calculate derivative wrt sigma
         lower_dsigma_inner_val = (lower_pdf.T *

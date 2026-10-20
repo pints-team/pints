@@ -240,6 +240,88 @@ class TestCensoredGaussianLogLikelihood(unittest.TestCase):
             [1.1, 0.0, -5.5]])
         cls.sigma = 0.1
 
+    def test_evaluateS1_parameter_count(self):
+        # Model parameter and output axes need not have the same length.
+        class LinearModel(pints.ForwardModelS1):
+            def __init__(self, n_parameters, n_outputs):
+                self.n = n_parameters
+                self.outputs = n_outputs
+
+            def n_parameters(self):
+                return self.n
+
+            def n_outputs(self):
+                return self.outputs
+
+            def simulate(self, parameters, times):
+                values = np.column_stack((parameters[0] * times,
+                                          2 * parameters[0] * times))
+                if self.n > 1:
+                    values[:, 0] += parameters[1]
+                if self.n > 2:
+                    if self.outputs == 1:
+                        values[:, 0] += parameters[2] * times**2
+                    else:
+                        values[:, 1] += parameters[2]
+                return values[:, 0] if self.outputs == 1 else values
+
+            def simulateS1(self, parameters, times):
+                derivatives = np.zeros((len(times), 2, self.n))
+                derivatives[:, 0, 0] = times
+                derivatives[:, 1, 0] = 2 * times
+                if self.n > 1:
+                    derivatives[:, 0, 1] = 1
+                if self.n > 2:
+                    if self.outputs == 1:
+                        derivatives[:, 0, 2] = times**2
+                    else:
+                        derivatives[:, 1, 2] = 1
+                if self.outputs == 1:
+                    derivatives = derivatives[:, 0, :]
+                return self.simulate(parameters, times), derivatives
+
+        times = np.array([0., 0.5, 1., 1.5])
+        values = np.array([[-0.4, 0.4], [0.6, 1.2],
+                           [1.4, 1.8], [2.2, 3.2]])
+        for n_outputs in (1, 2):
+            for n_parameters in (1, 2, 3):
+                for lower, upper in ((None, None), ([0., 0.5], None),
+                                     (None, [1., 2.]),
+                                     ([0., 0.5], [1., 2.])):
+                    with self.subTest(n_outputs=n_outputs,
+                                      n_parameters=n_parameters,
+                                      lower=lower, upper=upper):
+                        model = LinearModel(n_parameters, n_outputs)
+                        data = np.clip(values,
+                                       -np.inf if lower is None else lower,
+                                       np.inf if upper is None else upper)
+                        if n_outputs == 1:
+                            data = data[:, 0]
+                            lower = None if lower is None else lower[0]
+                            upper = None if upper is None else upper[0]
+                            problem = pints.SingleOutputProblem(
+                                model, times, data)
+                        else:
+                            problem = pints.MultiOutputProblem(
+                                model, times, data)
+                        likelihood = pints.CensoredGaussianLogLikelihood(
+                            problem, lower=lower, upper=upper)
+                        parameters = np.r_[np.array([0.4, 0.1, 0.3])[
+                            :n_parameters], [0.9, 1.1][:n_outputs]]
+                        with np.errstate(divide='ignore', invalid='ignore'):
+                            score, gradient = likelihood.evaluateS1(parameters)
+                            self.assertEqual(gradient.shape, parameters.shape)
+                            self.assertEqual(score, likelihood(parameters))
+                            expected = np.empty_like(parameters)
+                            for j in range(len(parameters)):
+                                step = np.zeros_like(parameters)
+                                step[j] = 1e-5
+                                expected[j] = (likelihood(parameters + step)
+                                               - likelihood(parameters - step)
+                                               ) / (2 * step[j])
+                        np.testing.assert_allclose(gradient, expected,
+                                                   rtol=1e-5, atol=1e-5)
+
     def test_call_list_none_censored(self):
         values = self.data_single.tolist()
         problem = pints.SingleOutputProblem(
