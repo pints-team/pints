@@ -1,0 +1,67 @@
+name: Unit tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    # Run workflow when PR is changed, or when changed from draft to ready
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - '**'
+
+jobs:
+
+  run-unit-tests:
+    name: Run unit tests
+    runs-on: ${{ matrix.os }}
+
+    # Skip job if it's a draft PR
+    if: github.event.pull_request.draft == false
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - py: "3.9"
+            os: ubuntu-22.04
+          - py: "3.10"
+            os: ubuntu-24.04
+            extras: ".[stan]"
+          - py: "3.10"
+            os: windows-2025
+          - py: "3.11"
+            os: ubuntu-24.04-arm
+          - py: "3.11"
+            os: macos-15
+            extras: ".[stan]"
+          - py: "3.12"
+            os: ubuntu-24.04
+          - py: "3.12"
+            os: windows-11-arm
+          - py: "3.13"
+            os: ubuntu-24.04-arm
+          - py: "3.13"
+            os: macos-26-intel
+          - py: "3.14"
+            os: ubuntu-24.04
+          - py: "3.14"
+            os: macos-26
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python ${{ matrix.py }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.py }}
+
+      - name: install pints
+        run: |
+          python --version
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install . ${{ matrix.extras || '' }}
+
+      - name: run unit tests
+        run: |
+          python run-tests.py --unit
