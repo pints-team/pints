@@ -41,7 +41,7 @@ def effective_sample_size_single_parameter(x):
     rho = autocorrelation(x)
     T = _autocorrelate_negative(rho)
     n = len(x)
-    ess = n / (1 + 2 * np.sum(rho[0:T]))
+    ess = n / (1 + 2 * np.sum(rho[1:T]))
     return ess
 
 

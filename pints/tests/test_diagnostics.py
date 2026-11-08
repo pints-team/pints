@@ -44,13 +44,19 @@ class TestDiagnostics(unittest.TestCase):
         # For case with negative elements in x
         x = np.array([1, 2, 3, 4, -1, -1])
         y = pints._diagnostics.effective_sample_size_single_parameter(x)
-        self.assertAlmostEqual(y, 1.75076, 5)
+        self.assertAlmostEqual(y, 4.20437956, 5)
 
         # Case with positive elements only in x
         x = np.array([1, 2, 3, 4, 1, 1])
         self.assertAlmostEqual(
             pints._diagnostics.effective_sample_size_single_parameter(x),
-            1.846154, 6)
+            4.8, 6)
+
+        # IID normal draws: ESS should be approximately equal to sample size n
+        rng = np.random.default_rng(0)
+        x_iid = rng.normal(size=20000)
+        ess_iid = pints._diagnostics.effective_sample_size_single_parameter(x_iid)
+        self.assertAlmostEqual(ess_iid / 20000, 1.0, delta=0.05)
 
     def test_effective_sample_size(self):
         # Tests ess for a matrix of parameters
@@ -59,8 +65,8 @@ class TestDiagnostics(unittest.TestCase):
         x = np.transpose(np.array([[1.0, 1.1, 1.4, 1.3, 1.3],
                                    [1.0, 2.0, 3.0, 4.0, 5.0]]))
         y = pints._diagnostics.effective_sample_size(x)
-        self.assertAlmostEqual(y[0], 1.439232, 6)
-        self.assertAlmostEqual(y[1], 1.315789, 6)
+        self.assertAlmostEqual(y[0], 3.391959798994974, 6)
+        self.assertAlmostEqual(y[1], 2.7777777777777777, 6)
 
         # Bad calls
         self.assertRaisesRegex(
